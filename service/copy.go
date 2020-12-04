@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func CopyFile(source, dest string) error {
@@ -44,6 +45,7 @@ func CopyFile(source, dest string) error {
 			return err
 		}
 	}
+	<-time.After(10 * time.Second)
 
 	return nil
 }

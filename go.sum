@@ -2,6 +2,8 @@ github.com/allentom/haruka v0.0.0-20201028135314-9eb73483a10c h1:3WpDQqXOX2y/twX
 github.com/allentom/haruka v0.0.0-20201028135314-9eb73483a10c/go.mod h1:YtREsaYIOBoUkkdLtXF2gtFY/1xuVSJxsNfHXjB8S2Q=
 github.com/allentom/haruka v0.0.0-20201203085917-83712cd1246a h1:lI9vJaFvWTwbE6q/JkTG5UlUh+Rsjsb2xAaZrs48dTo=
 github.com/allentom/haruka v0.0.0-20201203085917-83712cd1246a/go.mod h1:8Ttln+JTVL2fTQ5TuPNKtZFdBWX63+/dUS/fbPdS8NM=
+github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9 h1:qw53Y6Sbg3feyUvcRd6iI/S5GJnZNU3m19KZ1SJghHs=
+github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9/go.mod h1:8Ttln+JTVL2fTQ5TuPNKtZFdBWX63+/dUS/fbPdS8NM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
@@ -9,6 +11,8 @@ github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/rs/xid v1.2.1 h1:mhH9Nq+C1fY2l1XIpgxIiUOfNpRBYH1kKcr+qfKgjRc=
+github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/spf13/afero v1.4.1 h1:asw9sl74539yqavKaglDM5hFpdJVK0Y5Dr/JOgQ89nQ=
 github.com/spf13/afero v1.4.1/go.mod h1:Ai8FlHk4v/PARR026UzYexafAt9roJ7LcLMAmO6Z93I=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
