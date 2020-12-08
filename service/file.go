@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/spf13/afero"
 	"os"
 )
@@ -48,7 +49,7 @@ type CopyAnalyzeResult struct {
 	TotalSize int64
 }
 
-func analyzeCopySource(src string) (*CopyAnalyzeResult, error) {
+func analyzeSource(src string) (*CopyAnalyzeResult, error) {
 	sourceStat, err := AppFs.Stat(src)
 	if err != nil {
 		return nil, err
@@ -75,14 +76,44 @@ func analyzeCopySource(src string) (*CopyAnalyzeResult, error) {
 		}, nil
 	}
 }
-func CopyTask(src, dest string) error {
-	// analyze
+
+type DeleteNotifier struct {
+	DeleteChan     chan string
+	DeleteDoneChan chan string
+	Info           *CopyAnalyzeResult
+}
+
+func Delete(src string, notifier *DeleteNotifier) error {
 	srcStat, err := AppFs.Stat(src)
 	if err != nil {
 		return err
 	}
 	if srcStat.IsDir() {
-
+		err = afero.Walk(AppFs, src, func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				if notifier != nil {
+					notifier.DeleteChan <- src
+				}
+				err := AppFs.Remove(path)
+				fmt.Println(path)
+				if err != nil {
+					return err
+				}
+				if notifier != nil {
+					notifier.DeleteDoneChan <- src
+				}
+			}
+			return nil
+		})
+		err = AppFs.RemoveAll(src)
+	} else {
+		if notifier != nil {
+			notifier.DeleteChan <- src
+		}
+		err = AppFs.Remove(src)
+		if notifier != nil {
+			notifier.DeleteDoneChan <- src
+		}
 	}
-	return nil
+	return err
 }

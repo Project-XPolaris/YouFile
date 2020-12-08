@@ -12,6 +12,7 @@ var DefaultTask *TaskPool = NewTaskPool()
 const (
 	TaskTypeCopy      = "Copy"
 	TaskTypeSearch    = "Search"
+	TaskTypeDelete    = "Delete"
 	TaskStateRunning  = "Running"
 	TaskStateComplete = "Complete"
 	TaskStateError    = "Error"
@@ -91,7 +92,7 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 	go func() {
 		output := task.Output.(*CopyFileTaskOutput)
 		// analyze
-		copyInfo, err := analyzeCopySource(src)
+		copyInfo, err := analyzeSource(src)
 		t.Lock()
 		if err != nil {
 			t.Lock()
@@ -183,4 +184,90 @@ type CopyFileTaskOutput struct {
 	CurrentCopy    string  `json:"current_copy"`
 	Progress       float64 `json:"progress"`
 	Speed          int64   `json:"speed"`
+}
+
+type DeleteFileTaskOutput struct {
+	FileCount     int     `json:"file_count"`
+	Complete      int     `json:"complete"`
+	Src           string  `json:"src"`
+	Progress      float64 `json:"progress"`
+	Speed         int     `json:"speed"`
+	CurrentDelete string  `json:"current_delete"`
+}
+
+func (t *TaskPool) NewDeleteFileTask(src, dest string) *Task {
+	task := &Task{
+		Id:     xid.New().String(),
+		Type:   TaskTypeDelete,
+		Status: TaskStateAnalyze,
+		Output: &DeleteFileTaskOutput{
+			Src: src,
+		},
+	}
+	t.Lock()
+	t.Tasks = append(t.Tasks, task)
+	t.Unlock()
+	go func() {
+		output := task.Output.(*DeleteFileTaskOutput)
+		// analyze
+		copyInfo, err := analyzeSource(src)
+		t.Lock()
+		if err != nil {
+			t.Lock()
+			task.Error = err
+			task.Status = TaskStateError
+			return
+		}
+		output.FileCount = copyInfo.FileCount
+		task.Status = TaskStateRunning
+		t.Unlock()
+
+		notifier := &DeleteNotifier{
+			DeleteChan:     make(chan string),
+			DeleteDoneChan: make(chan string),
+		}
+		// update info
+		go func() {
+			var completeCount int = 0
+			ticker := time.NewTicker(2 * time.Second)
+			var lastComplete int = 0
+			for {
+				select {
+				case currentFile := <-notifier.DeleteChan:
+					t.Lock()
+					output.CurrentDelete = currentFile
+					t.Unlock()
+				case <-ticker.C:
+					nowCount := output.Complete
+					t.Lock()
+					output.Speed = nowCount - lastComplete
+					t.Unlock()
+					lastComplete = output.Complete
+				case <-notifier.DeleteDoneChan:
+					t.Lock()
+					completeCount += 1
+					output.Complete = completeCount
+					output.Progress = float64(completeCount) / float64(output.FileCount)
+					t.Unlock()
+					if completeCount == output.FileCount {
+						//fmt.Println(" copy complete")
+						t.Lock()
+						output.Progress = 1
+						return
+					}
+				}
+			}
+		}()
+		err = Delete(src, notifier)
+		t.Lock()
+		if err != nil {
+			t.Lock()
+			task.Error = err
+			task.Status = TaskStateError
+			return
+		}
+		task.Status = TaskStateComplete
+		t.Unlock()
+	}()
+	return task
 }
