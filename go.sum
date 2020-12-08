@@ -5,6 +5,8 @@ github.com/allentom/haruka v0.0.0-20201203085917-83712cd1246a/go.mod h1:8Ttln+JT
 github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9 h1:qw53Y6Sbg3feyUvcRd6iI/S5GJnZNU3m19KZ1SJghHs=
 github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9/go.mod h1:8Ttln+JTVL2fTQ5TuPNKtZFdBWX63+/dUS/fbPdS8NM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
+github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=

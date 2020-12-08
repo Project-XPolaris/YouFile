@@ -32,8 +32,9 @@ var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	src := context.GetQueryString("src")
 	dest := context.GetQueryString("dest")
 
-	err := service.Copy(src, dest)
+	err := service.Copy(src, dest, nil)
 	if err != nil {
+		fmt.Println(err.Error())
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
@@ -110,6 +111,13 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 	searchPath := context.GetQueryString("searchPath")
 	searchKey := context.GetQueryString("searchKey")
 	task := service.DefaultTask.NewScanFileTask(searchPath, searchKey)
+	context.JSON(task)
+}
+
+var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
+	src := context.GetQueryString("src")
+	dest := context.GetQueryString("dest")
+	task := service.DefaultTask.NewCopyFileTask(src, dest)
 	context.JSON(task)
 }
 

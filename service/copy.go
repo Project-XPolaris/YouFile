@@ -6,9 +6,19 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"youfile/util"
 )
 
-func CopyFile(source, dest string) error {
+type CopyFileNotifier struct {
+	CurrentFileChan   chan string
+	CompleteDeltaChan chan int64
+	FileCompleteChan  chan string
+}
+
+func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
+	if notifier != nil {
+		notifier.CurrentFileChan <- source
+	}
 	// Open the source file.
 	src, err := AppFs.Open(source)
 	if err != nil {
@@ -29,9 +39,29 @@ func CopyFile(source, dest string) error {
 		return err
 	}
 	defer dst.Close()
-
+	srcStats, err := AppFs.Stat(source)
+	if err != nil {
+		return err
+	}
+	counterReader := util.NewCounterReader(src)
+	var lastCompleteLength int64 = 0
+	if notifier != nil {
+		go func() {
+			ticker := time.NewTicker(1 * time.Second)
+			for {
+				select {
+				case <-ticker.C:
+					notifier.CompleteDeltaChan <- counterReader.N() - lastCompleteLength
+					lastCompleteLength = counterReader.N()
+					if counterReader.N() == srcStats.Size() {
+						return
+					}
+				}
+			}
+		}()
+	}
 	// Copy the contents of the file.
-	_, err = io.Copy(dst, src)
+	_, err = io.Copy(dst, counterReader)
 	if err != nil {
 		return err
 	}
@@ -45,12 +75,14 @@ func CopyFile(source, dest string) error {
 			return err
 		}
 	}
-	<-time.After(10 * time.Second)
 
+	if notifier != nil {
+		notifier.FileCompleteChan <- source
+	}
 	return nil
 }
 
-func CopyDir(source, dest string) error {
+func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
 	// Get properties of source.
 	srcinfo, err := AppFs.Stat(source)
 	if err != nil {
@@ -77,13 +109,13 @@ func CopyDir(source, dest string) error {
 
 		if obj.IsDir() {
 			// Create sub-directories, recursively.
-			err = CopyDir(fsource, fdest)
+			err = CopyDir(fsource, fdest, notifier)
 			if err != nil {
 				errs = append(errs, err)
 			}
 		} else {
 			// Perform the file copy.
-			err = CopyFile(fsource, fdest)
+			err = CopyFile(fsource, fdest, notifier)
 			if err != nil {
 				errs = append(errs, err)
 			}
