@@ -130,3 +130,20 @@ var getTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 	}
 	context.JSON(template.NewTaskTemplate(task))
 }
+
+var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context) {
+	dirPath := context.GetQueryString("dirPath")
+	perm, err := context.GetQueryInt("perm")
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	err = service.NewDirectory(dirPath, perm)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	err = context.JSON(map[string]interface{}{
+		"result": "success",
+	})
+}

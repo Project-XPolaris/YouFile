@@ -117,3 +117,8 @@ func Delete(src string, notifier *DeleteNotifier) error {
 	}
 	return err
 }
+
+func NewDirectory(dirPath string, perm int) error {
+	err := AppFs.MkdirAll(dirPath, os.FileMode(perm))
+	return err
+}
