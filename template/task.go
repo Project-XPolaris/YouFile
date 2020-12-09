@@ -23,12 +23,12 @@ func NewTaskTemplate(task *service.Task) *TaskTemplate {
 }
 func SerializeTaskOutput(data interface{}) interface{} {
 	switch v := data.(type) {
-	case service.ScanFileOutput:
+	case *service.SearchFileOutput:
 		return SerializeSearchFileOutput(v)
 	default:
 		return data
 	}
 }
-func SerializeSearchFileOutput(data service.ScanFileOutput) interface{} {
-	return NewFileListTemplate(data.Files, data.Parent)
+func SerializeSearchFileOutput(data *service.SearchFileOutput) interface{} {
+	return NewFileListTemplateFromTargetFile(data.Files)
 }

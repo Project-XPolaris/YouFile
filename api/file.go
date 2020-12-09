@@ -94,12 +94,17 @@ var chmodFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 var searchFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	searchPath := context.GetQueryString("searchPath")
 	searchKey := context.GetQueryString("searchKey")
-	items, err := service.SearchFile(searchPath, searchKey)
+	limit, err := context.GetQueryInt("limit")
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	data := template.NewFileListTemplate(items, searchPath)
+	items, err := service.SearchFile(searchPath, searchKey, nil, limit)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	data := template.NewFileListTemplateFromTargetFile(items)
 	err = context.JSON(data)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
@@ -110,7 +115,12 @@ var searchFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 	searchPath := context.GetQueryString("searchPath")
 	searchKey := context.GetQueryString("searchKey")
-	task := service.DefaultTask.NewScanFileTask(searchPath, searchKey)
+	limit, err := context.GetQueryInt("limit")
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	task := service.DefaultTask.NewSearchFileTask(searchPath, searchKey, limit)
 	context.JSON(task)
 }
 
@@ -129,6 +139,14 @@ var getTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 		return
 	}
 	context.JSON(template.NewTaskTemplate(task))
+}
+
+var stopTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
+	taskId := context.GetQueryString("taskId")
+	service.DefaultTask.StopTask(taskId)
+	context.JSON(map[string]interface{}{
+		"result": "success",
+	})
 }
 
 var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context) {

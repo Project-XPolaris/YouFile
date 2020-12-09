@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/spf13/afero"
 	"os"
 )
@@ -95,7 +94,7 @@ func Delete(src string, notifier *DeleteNotifier) error {
 					notifier.DeleteChan <- src
 				}
 				err := AppFs.Remove(path)
-				fmt.Println(path)
+				//fmt.Println(path)
 				if err != nil {
 					return err
 				}

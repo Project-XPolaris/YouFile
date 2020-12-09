@@ -3,6 +3,7 @@ package template
 import (
 	"os"
 	"path/filepath"
+	"youfile/service"
 )
 
 type FileItem struct {
@@ -24,6 +25,24 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTempl
 			Size: info.Size(),
 		}
 		if info.IsDir() {
+			item.Type = "Directory"
+		} else {
+			item.Type = "File"
+		}
+		items = append(items, item)
+	}
+	return &FileListTemplate{Result: items}
+}
+
+func NewFileListTemplateFromTargetFile(result []service.TargetFile) *FileListTemplate {
+	items := make([]FileItem, 0)
+	for _, targetFile := range result {
+		item := FileItem{
+			Name: targetFile.Info.Name(),
+			Path: targetFile.Path,
+			Size: targetFile.Info.Size(),
+		}
+		if targetFile.Info.IsDir() {
 			item.Type = "Directory"
 		} else {
 			item.Type = "File"

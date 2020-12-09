@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/rs/xid"
-	"os"
 	"sync"
 	"time"
 )
@@ -20,11 +19,12 @@ const (
 )
 
 type Task struct {
-	Id     string      `json:"id"`
-	Type   string      `json:"type"`
-	Status string      `json:"status"`
-	Output interface{} `json:"output,omitempty"`
-	Error  error       `json:"error,omitempty"`
+	Id            string        `json:"id"`
+	Type          string        `json:"type"`
+	Status        string        `json:"status"`
+	Output        interface{}   `json:"output,omitempty"`
+	Error         error         `json:"error,omitempty"`
+	InterruptChan chan struct{} `json:"-"`
 }
 type TaskPool struct {
 	Tasks []*Task
@@ -42,33 +42,60 @@ func (t *TaskPool) GetTask(id string) *Task {
 	}
 	return nil
 }
-
-type ScanFileOutput struct {
-	Parent string
-	Files  []os.FileInfo
+func (t *TaskPool) StopTask(id string) {
+	for _, task := range t.Tasks {
+		if task.Id == id {
+			task.InterruptChan <- struct{}{}
+		}
+	}
 }
 
-func (t *TaskPool) NewScanFileTask(src string, key string) *Task {
+type SearchFileOutput struct {
+	Files []TargetFile
+}
+
+func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeSearch,
 		Status: TaskStateRunning,
+		Output: &SearchFileOutput{
+			Files: make([]TargetFile, 0),
+		},
+		InterruptChan: make(chan struct{}),
 	}
 	t.Lock()
 	t.Tasks = append(t.Tasks, task)
 	t.Unlock()
 	go func() {
-		info, err := SearchFile(src, key)
+		output := task.Output.(*SearchFileOutput)
+		notifier := &SearchFileNotifier{
+			HitChan: make(chan TargetFile),
+		}
+		doneSearchChan := make(chan struct{})
+		go func() {
+			for {
+				select {
+				case file := <-notifier.HitChan:
+					t.Lock()
+					output.Files = append(output.Files, file)
+					t.Unlock()
+				case <-task.InterruptChan:
+					t.Lock()
+					notifier.StopFlag = true
+					t.Unlock()
+				case <-doneSearchChan:
+					//fmt.Println("task complete")
+					return
+				}
+			}
+		}()
+		_, err := SearchFile(src, key, notifier, limit)
+		doneSearchChan <- struct{}{}
+		t.Lock()
 		if err != nil {
-			t.Lock()
 			task.Error = err
 			task.Status = TaskStateError
-			t.Unlock()
-		}
-		t.Lock()
-		task.Output = ScanFileOutput{
-			Parent: src,
-			Files:  info,
 		}
 		task.Status = TaskStateComplete
 		t.Unlock()
@@ -85,6 +112,7 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 			Src:  src,
 			Dest: dest,
 		},
+		InterruptChan: make(chan struct{}),
 	}
 	t.Lock()
 	t.Tasks = append(t.Tasks, task)
@@ -195,7 +223,7 @@ type DeleteFileTaskOutput struct {
 	CurrentDelete string  `json:"current_delete"`
 }
 
-func (t *TaskPool) NewDeleteFileTask(src, dest string) *Task {
+func (t *TaskPool) NewDeleteFileTask(src string) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeDelete,
@@ -203,6 +231,7 @@ func (t *TaskPool) NewDeleteFileTask(src, dest string) *Task {
 		Output: &DeleteFileTaskOutput{
 			Src: src,
 		},
+		InterruptChan: make(chan struct{}),
 	}
 	t.Lock()
 	t.Tasks = append(t.Tasks, task)
