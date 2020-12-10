@@ -34,6 +34,9 @@ type TaskPool struct {
 func NewTaskPool() *TaskPool {
 	return &TaskPool{Tasks: make([]*Task, 0)}
 }
+func (t *TaskPool) GetAllTask() []*Task {
+	return t.Tasks
+}
 func (t *TaskPool) GetTask(id string) *Task {
 	for _, task := range t.Tasks {
 		if task.Id == id {

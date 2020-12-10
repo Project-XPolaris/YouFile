@@ -149,6 +149,16 @@ var stopTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 	})
 }
 
+var getTaskList haruka.RequestHandler = func(context *haruka.Context) {
+	tasks := service.DefaultTask.GetAllTask()
+	taskTemplates := make([]*template.TaskTemplate, 0)
+	for _, task := range tasks {
+		taskTemplates = append(taskTemplates, template.NewTaskTemplate(task))
+	}
+	context.JSON(map[string]interface{}{
+		"result": taskTemplates,
+	})
+}
 var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context) {
 	dirPath := context.GetQueryString("dirPath")
 	perm, err := context.GetQueryInt("perm")

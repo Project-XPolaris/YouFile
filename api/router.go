@@ -15,4 +15,5 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/task/copy", newCopyFileTaskHandler)
 	e.Router.AddHandler("/task/stop", stopTaskHandler)
 	e.Router.AddHandler("/task/get", getTaskHandler)
+	e.Router.AddHandler("/task/all", getTaskList)
 }
