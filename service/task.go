@@ -137,6 +137,7 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 			CurrentFileChan:   make(chan string),
 			CompleteDeltaChan: make(chan int64),
 			FileCompleteChan:  make(chan string),
+			StopChan:          make(chan struct{}, 1),
 		}
 		// update info
 		go func() {
@@ -185,6 +186,9 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 						output.Progress = 1
 						return
 					}
+				case <-task.InterruptChan:
+					notifier.StopFlag = true
+					notifier.StopChan <- struct{}{}
 				}
 			}
 		}()

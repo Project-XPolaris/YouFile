@@ -13,10 +13,15 @@ type CopyFileNotifier struct {
 	CurrentFileChan   chan string
 	CompleteDeltaChan chan int64
 	FileCompleteChan  chan string
+	StopChan          chan struct{}
+	StopFlag          bool
 }
 
 func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 	if notifier != nil {
+		if notifier.StopFlag {
+			return nil
+		}
 		notifier.CurrentFileChan <- source
 	}
 	// Open the source file.
@@ -56,13 +61,19 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 					if counterReader.N() == srcStats.Size() {
 						return
 					}
+				case <-notifier.StopChan:
+					counterReader.StopChan <- struct{}{}
 				}
 			}
 		}()
 	}
 	// Copy the contents of the file.
 	_, err = io.Copy(dst, counterReader)
+
 	if err != nil {
+		if err == util.CopyInterrupt {
+			return nil
+		}
 		return err
 	}
 
@@ -83,6 +94,9 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 }
 
 func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
+	if notifier != nil && notifier.StopFlag {
+		return nil
+	}
 	// Get properties of source.
 	srcinfo, err := AppFs.Stat(source)
 	if err != nil {

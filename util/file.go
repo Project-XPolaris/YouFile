@@ -1,33 +1,44 @@
 package util
 
 import (
+	"errors"
 	"io"
 	"sync"
 )
 
-type CounterReader struct {
-	r io.Reader
+var (
+	CopyInterrupt = errors.New("stop with interrupt")
+)
 
-	lock sync.RWMutex // protects n and err
-	n    int64
-	err  error
+type CounterReader struct {
+	r        io.Reader
+	StopChan chan struct{}
+	lock     sync.RWMutex // protects n and err
+	n        int64
+	err      error
 }
 
 // NewReader makes a new CounterReader that counts the bytes
 // read through it.
 func NewCounterReader(r io.Reader) *CounterReader {
 	return &CounterReader{
-		r: r,
+		r:        r,
+		StopChan: make(chan struct{}, 1),
 	}
 }
 
 func (r *CounterReader) Read(p []byte) (n int, err error) {
-	n, err = r.r.Read(p)
-	r.lock.Lock()
-	r.n += int64(n)
-	r.err = err
-	r.lock.Unlock()
-	return
+	select {
+	case <-r.StopChan:
+		return 0, CopyInterrupt
+	default:
+		n, err = r.r.Read(p)
+		r.lock.Lock()
+		r.n += int64(n)
+		r.err = err
+		r.lock.Unlock()
+		return
+	}
 }
 
 // N gets the number of bytes that have been read
