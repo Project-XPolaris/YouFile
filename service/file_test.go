@@ -1,11 +1,5 @@
 package service
 
-import (
-	"fmt"
-	"testing"
-	"time"
-)
-
 //func TestFile(t *testing.T) {
 //	user, err := user.Current()
 //	if err != nil {
@@ -44,25 +38,3 @@ import (
 //		t.Error(err)
 //	}
 //}
-
-func TestStopCopyFileTask(t *testing.T) {
-	var task *Task
-	go func() {
-		<-time.After(6 * time.Second)
-		DefaultTask.Lock()
-		if task != nil {
-			task.InterruptChan <- struct{}{}
-		}
-		DefaultTask.Unlock()
-	}()
-	go func() {
-		for {
-			<-time.After(1 * time.Second)
-			DefaultTask.Lock()
-			fmt.Println(task.Status)
-			DefaultTask.Unlock()
-		}
-	}()
-	task = DefaultTask.NewCopyFileTask("C:\\Users\\Takay\\Desktop\\New folder\\youmusic2", "C:\\Users\\Takay\\Desktop\\New folder\\youmusic3")
-	<-time.After(10 * time.Second)
-}

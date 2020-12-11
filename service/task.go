@@ -187,6 +187,7 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 						t.Lock()
 						output.CompleteLength = output.TotalLength
 						output.Progress = 1
+						t.Unlock()
 						return
 					}
 				case <-task.InterruptChan:
@@ -279,6 +280,10 @@ func (t *TaskPool) NewDeleteFileTask(src string) *Task {
 					output.Speed = nowCount - lastComplete
 					t.Unlock()
 					lastComplete = output.Complete
+				case <-task.InterruptChan:
+					t.Lock()
+					notifier.StopFlag = true
+					t.Unlock()
 				case <-notifier.DeleteDoneChan:
 					t.Lock()
 					completeCount += 1

@@ -1,8 +1,11 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/spf13/afero"
 	"os"
+	"time"
 )
 
 func ReadDir(readPath string) ([]os.FileInfo, error) {
@@ -76,10 +79,15 @@ func analyzeSource(src string) (*CopyAnalyzeResult, error) {
 	}
 }
 
+var (
+	DeleteInterrupt = errors.New("delete interrupt")
+)
+
 type DeleteNotifier struct {
 	DeleteChan     chan string
 	DeleteDoneChan chan string
 	Info           *CopyAnalyzeResult
+	StopFlag       bool
 }
 
 func Delete(src string, notifier *DeleteNotifier) error {
@@ -93,6 +101,7 @@ func Delete(src string, notifier *DeleteNotifier) error {
 				if notifier != nil {
 					notifier.DeleteChan <- src
 				}
+				<-time.After(500 * time.Millisecond)
 				err := AppFs.Remove(path)
 				//fmt.Println(path)
 				if err != nil {
@@ -102,6 +111,10 @@ func Delete(src string, notifier *DeleteNotifier) error {
 					notifier.DeleteDoneChan <- src
 				}
 			}
+			if notifier != nil && notifier.StopFlag {
+				fmt.Println("try to stop delete")
+				return DeleteInterrupt
+			}
 			return nil
 		})
 		err = AppFs.RemoveAll(src)
@@ -109,9 +122,13 @@ func Delete(src string, notifier *DeleteNotifier) error {
 		if notifier != nil {
 			notifier.DeleteChan <- src
 		}
+		<-time.After(500 * time.Millisecond)
 		err = AppFs.Remove(src)
 		if notifier != nil {
 			notifier.DeleteDoneChan <- src
+		}
+		if notifier != nil && notifier.StopFlag {
+			return DeleteInterrupt
 		}
 	}
 	return err
