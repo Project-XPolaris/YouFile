@@ -4,6 +4,7 @@ import (
 	"github.com/rs/xid"
 	"sync"
 	"time"
+	"youfile/util"
 )
 
 var DefaultTask *TaskPool = NewTaskPool()
@@ -106,14 +107,18 @@ func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
 	return task
 }
 
-func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
+type CopyOption struct {
+	Src  string `json:"src"`
+	Dest string `json:"dest"`
+}
+
+func (t *TaskPool) NewCopyFileTask(options []*CopyOption) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeCopy,
 		Status: TaskStateAnalyze,
 		Output: &CopyFileTaskOutput{
-			Src:  src,
-			Dest: dest,
+			List: options,
 		},
 		InterruptChan: make(chan struct{}),
 	}
@@ -123,16 +128,26 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 	go func() {
 		output := task.Output.(*CopyFileTaskOutput)
 		// analyze
-		copyInfo, err := analyzeSource(src)
-		t.Lock()
-		if err != nil {
-			t.Lock()
-			task.Error = err
-			task.Status = TaskStateError
-			return
+		infos := make([]*CopyAnalyzeResult, 0)
+		for _, option := range options {
+			copyInfo, err := analyzeSource(option.Src)
+			if err != nil {
+				t.Lock()
+				task.Error = err
+				task.Status = TaskStateError
+				t.Unlock()
+				return
+			}
+			infos = append(infos, copyInfo)
 		}
-		output.FileCount = copyInfo.FileCount
-		output.TotalLength = copyInfo.TotalSize
+
+		t.Lock()
+		output.FileCount = 0
+		output.TotalLength = 0
+		for _, info := range infos {
+			output.FileCount += info.FileCount
+			output.TotalLength += info.TotalSize
+		}
 		task.Status = TaskStateRunning
 		t.Unlock()
 
@@ -196,14 +211,21 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 				}
 			}
 		}()
-		err = Copy(src, dest, notifier)
-		t.Lock()
-		if err != nil {
-			t.Lock()
-			task.Error = err
-			task.Status = TaskStateError
-			return
+		for _, option := range options {
+			err := Copy(option.Src, option.Dest, notifier)
+			if err == util.CopyInterrupt {
+				break
+			}
+			if err != nil {
+				t.Lock()
+				task.Error = err
+				task.Status = TaskStateError
+				t.Unlock()
+				return
+			}
 		}
+
+		t.Lock()
 		task.Status = TaskStateComplete
 		t.Unlock()
 	}()
@@ -211,15 +233,14 @@ func (t *TaskPool) NewCopyFileTask(src, dest string) *Task {
 }
 
 type CopyFileTaskOutput struct {
-	TotalLength    int64   `json:"total_length"`
-	FileCount      int     `json:"file_count"`
-	Complete       int     `json:"complete"`
-	CompleteLength int64   `json:"complete_length"`
-	Src            string  `json:"src"`
-	Dest           string  `json:"dest"`
-	CurrentCopy    string  `json:"current_copy"`
-	Progress       float64 `json:"progress"`
-	Speed          int64   `json:"speed"`
+	TotalLength    int64         `json:"total_length"`
+	FileCount      int           `json:"file_count"`
+	Complete       int           `json:"complete"`
+	CompleteLength int64         `json:"complete_length"`
+	List           []*CopyOption `json:"list"`
+	CurrentCopy    string        `json:"current_copy"`
+	Progress       float64       `json:"progress"`
+	Speed          int64         `json:"speed"`
 }
 
 type DeleteFileTaskOutput struct {

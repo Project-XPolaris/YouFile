@@ -71,9 +71,6 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 	_, err = io.Copy(dst, counterReader)
 
 	if err != nil {
-		if err == util.CopyInterrupt {
-			return nil
-		}
 		return err
 	}
 
@@ -125,12 +122,18 @@ func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
 			// Create sub-directories, recursively.
 			err = CopyDir(fsource, fdest, notifier)
 			if err != nil {
+				if err == util.CopyInterrupt {
+					return err
+				}
 				errs = append(errs, err)
 			}
 		} else {
 			// Perform the file copy.
 			err = CopyFile(fsource, fdest, notifier)
 			if err != nil {
+				if err == util.CopyInterrupt {
+					return err
+				}
 				errs = append(errs, err)
 			}
 		}

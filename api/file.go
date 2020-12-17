@@ -124,10 +124,18 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 	context.JSON(task)
 }
 
+type CreateTaskRequestBody struct {
+	List []*service.CopyOption `json:"list"`
+}
+
 var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
-	src := context.GetQueryString("src")
-	dest := context.GetQueryString("dest")
-	task := service.DefaultTask.NewCopyFileTask(src, dest)
+	var requestBody CreateTaskRequestBody
+	err := context.ParseJson(&requestBody)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	task := service.DefaultTask.NewCopyFileTask(requestBody.List)
 	context.JSON(task)
 }
 
