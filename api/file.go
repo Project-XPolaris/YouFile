@@ -8,14 +8,15 @@ import (
 	"path/filepath"
 	"youfile/service"
 	"youfile/template"
+	"youfile/util"
 )
 
 var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 	readPath := context.GetQueryString("readPath")
 	if len(readPath) == 0 {
-		readPath = "./"
+		readPath = "/"
 	}
-	items, err := service.ReadDir(readPath)
+	items, err := service.ReadDir(util.ConvertPathWithOS(readPath))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -32,7 +33,7 @@ var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	src := context.GetQueryString("src")
 	dest := context.GetQueryString("dest")
 
-	err := service.Copy(src, dest, nil)
+	err := service.Copy(util.ConvertPathWithOS(src), util.ConvertPathWithOS(dest), nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
@@ -58,7 +59,7 @@ var deleteFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 var renameFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	newName := context.GetQueryString("new")
 	oldName := context.GetQueryString("old")
-	err := service.Rename(oldName, newName)
+	err := service.Rename(util.ConvertPathWithOS(oldName), util.ConvertPathWithOS(newName))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -70,7 +71,7 @@ var renameFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 
 var downloadFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	targetPath := context.GetQueryString("targetPath")
-	context.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(targetPath)))
+	context.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(util.ConvertPathWithOS(targetPath))))
 	http.ServeFile(context.Writer, context.Request, targetPath)
 }
 
@@ -81,7 +82,7 @@ var chmodFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	err = service.Chmod(target, perm)
+	err = service.Chmod(util.ConvertPathWithOS(target), perm)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -99,7 +100,7 @@ var searchFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	items, err := service.SearchFile(searchPath, searchKey, nil, limit)
+	items, err := service.SearchFile(util.ConvertPathWithOS(searchPath), searchKey, nil, limit)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -120,7 +121,7 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	task := service.DefaultTask.NewSearchFileTask(searchPath, searchKey, limit)
+	task := service.DefaultTask.NewSearchFileTask(util.ConvertPathWithOS(searchPath), searchKey, limit)
 	context.JSON(task)
 }
 
@@ -134,6 +135,10 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
+	}
+	for _, option := range requestBody.List {
+		option.Src = util.ConvertPathWithOS(option.Src)
+		option.Dest = util.ConvertPathWithOS(option.Dest)
 	}
 	task := service.DefaultTask.NewCopyFileTask(requestBody.List)
 	context.JSON(task)
@@ -174,7 +179,7 @@ var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context)
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	err = service.NewDirectory(dirPath, perm)
+	err = service.NewDirectory(util.ConvertPathWithOS(dirPath), perm)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
