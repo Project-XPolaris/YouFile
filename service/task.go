@@ -31,7 +31,51 @@ type TaskPool struct {
 	Tasks []*Task
 	sync.RWMutex
 }
+type TaskQueryBuilder struct {
+	Types  []string
+	Status []string
+}
 
+func (q *TaskQueryBuilder) WithTypes(types ...string) {
+	if q.Types == nil {
+		q.Types = make([]string, 0)
+	}
+	q.Types = append(q.Types, types...)
+}
+
+func (q *TaskQueryBuilder) WithStatus(status ...string) {
+	if q.Status == nil {
+		q.Status = make([]string, 0)
+	}
+	q.Status = append(q.Status, status...)
+}
+
+func (q *TaskQueryBuilder) Query() []*Task {
+	tasks := DefaultTask.GetAllTask()
+	for _, task := range tasks {
+		result := make([]*Task, 0)
+		if q.Types != nil {
+			for _, targetType := range q.Types {
+				if task.Type == targetType {
+					result = append(result, task)
+				}
+			}
+		}
+		tasks = result
+	}
+	for _, task := range tasks {
+		result := make([]*Task, 0)
+		if q.Status != nil {
+			for _, targetStatus := range q.Status {
+				if task.Status == targetStatus {
+					result = append(result, task)
+				}
+			}
+		}
+		tasks = result
+	}
+	return tasks
+}
 func NewTaskPool() *TaskPool {
 	return &TaskPool{Tasks: make([]*Task, 0)}
 }
