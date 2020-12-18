@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/spf13/afero"
 	"os"
-	"time"
 )
 
 func ReadDir(readPath string) ([]os.FileInfo, error) {
@@ -101,7 +100,6 @@ func Delete(src string, notifier *DeleteNotifier) error {
 				if notifier != nil {
 					notifier.DeleteChan <- src
 				}
-				<-time.After(500 * time.Millisecond)
 				err := AppFs.Remove(path)
 				//fmt.Println(path)
 				if err != nil {
@@ -122,7 +120,6 @@ func Delete(src string, notifier *DeleteNotifier) error {
 		if notifier != nil {
 			notifier.DeleteChan <- src
 		}
-		<-time.After(500 * time.Millisecond)
 		err = AppFs.Remove(src)
 		if notifier != nil {
 			notifier.DeleteDoneChan <- src

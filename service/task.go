@@ -288,15 +288,15 @@ type CopyFileTaskOutput struct {
 }
 
 type DeleteFileTaskOutput struct {
-	FileCount     int     `json:"file_count"`
-	Complete      int     `json:"complete"`
-	Src           string  `json:"src"`
-	Progress      float64 `json:"progress"`
-	Speed         int     `json:"speed"`
-	CurrentDelete string  `json:"current_delete"`
+	FileCount     int      `json:"file_count"`
+	Complete      int      `json:"complete"`
+	Src           []string `json:"src"`
+	Progress      float64  `json:"progress"`
+	Speed         int      `json:"speed"`
+	CurrentDelete string   `json:"current_delete"`
 }
 
-func (t *TaskPool) NewDeleteFileTask(src string) *Task {
+func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeDelete,
@@ -312,15 +312,24 @@ func (t *TaskPool) NewDeleteFileTask(src string) *Task {
 	go func() {
 		output := task.Output.(*DeleteFileTaskOutput)
 		// analyze
-		copyInfo, err := analyzeSource(src)
-		t.Lock()
-		if err != nil {
-			t.Lock()
-			task.Error = err
-			task.Status = TaskStateError
-			return
+		infos := make([]*CopyAnalyzeResult, 0)
+		for _, deleteSrc := range src {
+			copyInfo, err := analyzeSource(deleteSrc)
+			if err != nil {
+				t.Lock()
+				task.Error = err
+				task.Status = TaskStateError
+				t.Unlock()
+				return
+			}
+			infos = append(infos, copyInfo)
 		}
-		output.FileCount = copyInfo.FileCount
+
+		t.Lock()
+		output.FileCount = 0
+		for _, info := range infos {
+			output.FileCount += info.FileCount
+		}
 		task.Status = TaskStateRunning
 		t.Unlock()
 
@@ -359,19 +368,27 @@ func (t *TaskPool) NewDeleteFileTask(src string) *Task {
 						//fmt.Println(" copy complete")
 						t.Lock()
 						output.Progress = 1
+						t.Unlock()
 						return
 					}
 				}
 			}
 		}()
-		err = Delete(src, notifier)
-		t.Lock()
-		if err != nil {
-			t.Lock()
-			task.Error = err
-			task.Status = TaskStateError
-			return
+		for _, deleteSrc := range src {
+			err := Delete(deleteSrc, notifier)
+			if err != nil {
+				if err == DeleteInterrupt {
+					break
+				}
+				t.Lock()
+				task.Error = err
+				task.Status = TaskStateError
+				t.Unlock()
+				return
+			}
 		}
+
+		t.Lock()
 		task.Status = TaskStateComplete
 		t.Unlock()
 	}()

@@ -13,6 +13,7 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/path/mkdir", createDirectoryHandler)
 	e.Router.AddHandler("/task/search", newSearchFileTaskHandler)
 	e.Router.AddHandler("/task/copy", newCopyFileTaskHandler)
+	e.Router.AddHandler("/task/delete", newDeleteTaskHandler)
 	e.Router.AddHandler("/task/stop", stopTaskHandler)
 	e.Router.AddHandler("/task/get", getTaskHandler)
 	e.Router.AddHandler("/task/all", getTaskList)

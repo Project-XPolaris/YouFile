@@ -188,3 +188,18 @@ var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context)
 		"result": "success",
 	})
 }
+
+type NewDeleteTaskRequestBody struct {
+	List []string `json:"list"`
+}
+
+var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var requestBody NewDeleteTaskRequestBody
+	err := context.ParseJson(&requestBody)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	task := service.DefaultTask.NewDeleteFileTask(requestBody.List)
+	context.JSON(template.NewTaskTemplate(task))
+}
