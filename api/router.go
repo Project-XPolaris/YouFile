@@ -17,4 +17,6 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/task/stop", stopTaskHandler)
 	e.Router.AddHandler("/task/get", getTaskHandler)
 	e.Router.AddHandler("/task/all", getTaskList)
+	e.Router.POST("/mount/cifs", mountCifsHandler)
+	e.Router.POST("/umount", umountHandler)
 }
