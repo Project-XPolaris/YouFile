@@ -232,3 +232,69 @@ var umountHandler haruka.RequestHandler = func(context *haruka.Context) {
 		"result": "success",
 	})
 }
+
+var fstabMountListHandler haruka.RequestHandler = func(context *haruka.Context) {
+	data := service.DefaultFstab.Mounts
+	context.JSON(template.MountTemplateFromList(data))
+}
+
+var fstabAddMountHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var requestBody service.AddMountOption
+	err := context.ParseJson(&requestBody)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	service.DefaultFstab.AddMount(&requestBody)
+	err = service.DefaultFstab.Save()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = service.DefaultFstab.Reload()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = context.JSON(map[string]interface{}{
+		"result": "success",
+	})
+}
+
+var fstabRemoveMountHandler haruka.RequestHandler = func(context *haruka.Context) {
+	dirPath := context.GetQueryString("dirPath")
+	err := service.DefaultFstab.RemoveMount(dirPath)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = service.DefaultFstab.Save()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = service.DefaultFstab.Reload()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = context.JSON(map[string]interface{}{
+		"result": "success",
+	})
+}
+
+var fstabReMountHandler haruka.RequestHandler = func(context *haruka.Context) {
+	err := service.DefaultFstab.Save()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = service.DefaultFstab.Reload()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	err = context.JSON(map[string]interface{}{
+		"result": "success",
+	})
+}

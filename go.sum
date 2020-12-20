@@ -6,6 +6,8 @@ github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9 h1:qw53Y6Sbg3feyUv
 github.com/allentom/haruka v0.0.0-20201204033248-66415d97eaa9/go.mod h1:8Ttln+JTVL2fTQ5TuPNKtZFdBWX63+/dUS/fbPdS8NM=
 github.com/allentom/haruka v0.0.0-20201214083940-21401345d489 h1:+NUTL+UF0s9QVv4K3jWoBHXz+6lTu1YRnFVYYI0qX8E=
 github.com/allentom/haruka v0.0.0-20201214083940-21401345d489/go.mod h1:8Ttln+JTVL2fTQ5TuPNKtZFdBWX63+/dUS/fbPdS8NM=
+github.com/d-tux/go-fstab v0.0.0-20141204152952-eb4090f26517 h1:n6PaSJ+LKDvC7d70ZvddZ5lvEImrgQcHrIzmhl/gMmI=
+github.com/d-tux/go-fstab v0.0.0-20141204152952-eb4090f26517/go.mod h1:gTa6pRNTe3OacxnMjwPDS1lS6xcRkF6nxm/tkZ6/l8U=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=

@@ -29,8 +29,11 @@ func MountCIFS(option MountCIFSOption) error {
 	return nil
 }
 
-func UmountFS(dir string) error {
-	out, err := exec.Command("umount", dir).Output()
+func UmountFS(dir string, extra ...string) error {
+	params := make([]string, 0)
+	params = append(params, dir)
+	params = append(params, extra...)
+	out, err := exec.Command("umount", params...).Output()
 	if err != nil {
 		return err
 	}

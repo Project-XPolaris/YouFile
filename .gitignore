@@ -1,2 +1,4 @@
 .idea/
 *.exe
+file_test.go
+dev_test.go

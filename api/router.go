@@ -19,4 +19,8 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/task/all", getTaskList)
 	e.Router.POST("/mount/cifs", mountCifsHandler)
 	e.Router.POST("/umount", umountHandler)
+	e.Router.GET("/fstab/mounts", fstabMountListHandler)
+	e.Router.POST("/fstab/mounts", fstabAddMountHandler)
+	e.Router.DELETE("/fstab/mounts", fstabRemoveMountHandler)
+	e.Router.GET("/fstab/reload", fstabReMountHandler)
 }
