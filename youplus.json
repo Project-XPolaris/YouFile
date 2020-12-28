@@ -1,0 +1,4 @@
+{
+    "app_name":"YouFile Service",
+    "start_command":"./main.exe"
+}

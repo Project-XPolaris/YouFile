@@ -2,3 +2,4 @@
 *.exe
 file_test.go
 dev_test.go
+local_*_test.go
