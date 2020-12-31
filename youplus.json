@@ -1,4 +1,7 @@
 {
-    "app_name":"YouFile Service",
-    "start_command":"./main.exe"
+  "app_name": "YouFile Service",
+  "start_command": "./main.exe",
+  "auto_start": false,
+  "type":"Service",
+  "service_name":"YouFileCoreService"
 }
