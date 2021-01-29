@@ -16,7 +16,14 @@ var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 	if len(readPath) == 0 {
 		readPath = "/"
 	}
-	items, err := service.ReadDir(util.ConvertPathWithOS(readPath))
+	order := context.GetQueryString("order")
+	orderKey := context.GetQueryString("orderKey")
+	filefirst := context.GetQueryString("filefirst")
+	items, err := service.ReadDir(util.ConvertPathWithOS(readPath), service.ReadDirOption{
+		Order:     order,
+		OrderKey:  orderKey,
+		FileFirst: len(filefirst) > 0,
+	})
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return

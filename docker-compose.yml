@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  web:
+    container_name: youfile-core-service
+    build : .
+    ports:
+    - "8100:8300"

@@ -2,6 +2,7 @@
   "app_name": "YouFile Service",
   "start_command": "./main.exe",
   "auto_start": false,
-  "type":"Service",
-  "service_name":"YouFileCoreService"
+  "type":"Container",
+  "service_name":"YouFileCoreService",
+  "container_name": "/youfile-core-service"
 }
