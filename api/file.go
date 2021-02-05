@@ -298,3 +298,26 @@ var fstabReMountHandler haruka.RequestHandler = func(context *haruka.Context) {
 		"result": "success",
 	})
 }
+
+type OSInfoResponse struct {
+	RootPaths []service.RootPath `json:"root_paths,omitempty"`
+	Sep       string             `json:"sep" json:"sep,omitempty"`
+}
+
+var readOSInfoDirHandler haruka.RequestHandler = func(context *haruka.Context) {
+	paths, err := service.GetStartPath()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	info := OSInfoResponse{
+		RootPaths: paths,
+		Sep:       string(filepath.Separator),
+	}
+	context.JSON(info)
+}
+
+var getFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	targetPath := context.GetQueryString("target")
+	http.ServeFile(context.Writer, context.Request, targetPath)
+}

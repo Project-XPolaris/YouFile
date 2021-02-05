@@ -14,6 +14,7 @@ type FileItem struct {
 }
 type FileListTemplate struct {
 	Result []FileItem `json:"result"`
+	Sep    string     `json:"sep"`
 }
 
 func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTemplate {
@@ -31,7 +32,7 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTempl
 		}
 		items = append(items, item)
 	}
-	return &FileListTemplate{Result: items}
+	return &FileListTemplate{Result: items, Sep: string(filepath.Separator)}
 }
 
 func NewFileListTemplateFromTargetFile(result []service.TargetFile) *FileListTemplate {
