@@ -25,4 +25,5 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/fstab/reload", fstabReMountHandler)
 	e.Router.GET("/info", readOSInfoDirHandler)
 	e.Router.GET("/files", getFileHandler)
+	e.Router.AddHandler("/notification", notificationSocketHandler)
 }

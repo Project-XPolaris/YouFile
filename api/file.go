@@ -121,7 +121,25 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	task := service.DefaultTask.NewSearchFileTask(util.ConvertPathWithOS(searchPath), searchKey, limit)
+	task := service.DefaultTask.NewSearchFileTask(&service.NewSearchTaskOption{
+		Src:   searchPath,
+		Key:   searchKey,
+		Limit: limit,
+		OnDone: func(id string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "SearchTaskComplete",
+				"id":    id,
+			})
+		},
+		OnHit: func(id string, path string, name string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "SearchHit",
+				"id":    id,
+				"path":  path,
+				"name":  name,
+			})
+		},
+	})
 	context.JSON(task)
 }
 
@@ -139,8 +157,21 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 	for _, option := range requestBody.List {
 		option.Src = util.ConvertPathWithOS(option.Src)
 		option.Dest = util.ConvertPathWithOS(option.Dest)
+		option.OnComplete = func(id string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "CopyItemComplete",
+				"id":    id,
+				"src":   option.Src,
+				"dest":  option.Dest,
+			})
+		}
 	}
-	task := service.DefaultTask.NewCopyFileTask(requestBody.List)
+	task := service.DefaultTask.NewCopyFileTask(requestBody.List, func(id string) {
+		DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+			"event": "CopyTaskComplete",
+			"id":    id,
+		})
+	})
 	context.JSON(task)
 }
 
@@ -200,7 +231,22 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	task := service.DefaultTask.NewDeleteFileTask(requestBody.List)
+	task := service.DefaultTask.NewDeleteFileTask(&service.NewDeleteFIleTaskOption{
+		Src: requestBody.List,
+		OnDone: func(id string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "DeleteTaskDone",
+				"id":    id,
+			})
+		},
+		OnItemComplete: func(id string, src string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "DeleteItemComplete",
+				"id":    id,
+				"src":   src,
+			})
+		},
+	})
 	context.JSON(template.NewTaskTemplate(task))
 }
 

@@ -2,12 +2,13 @@ package service
 
 import (
 	"github.com/rs/xid"
+	"path/filepath"
 	"sync"
 	"time"
 	"youfile/util"
 )
 
-var DefaultTask *TaskPool = NewTaskPool()
+var DefaultTask = NewTaskPool()
 
 const (
 	TaskTypeCopy      = "Copy"
@@ -101,8 +102,15 @@ func (t *TaskPool) StopTask(id string) {
 type SearchFileOutput struct {
 	Files []TargetFile
 }
+type NewSearchTaskOption struct {
+	Src    string
+	Key    string
+	Limit  int
+	OnDone func(id string)
+	OnHit  func(id string, path string, name string)
+}
 
-func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
+func (t *TaskPool) NewSearchFileTask(option *NewSearchTaskOption) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeSearch,
@@ -127,6 +135,9 @@ func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
 				case file := <-notifier.HitChan:
 					t.Lock()
 					output.Files = append(output.Files, file)
+					if option.OnHit != nil {
+						option.OnHit(task.Id, file.Path, filepath.Base(file.Path))
+					}
 					t.Unlock()
 				case <-task.InterruptChan:
 					t.Lock()
@@ -138,7 +149,7 @@ func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
 				}
 			}
 		}()
-		_, err := SearchFile(src, key, notifier, limit)
+		_, err := SearchFile(option.Src, option.Key, notifier, option.Limit)
 		doneSearchChan <- struct{}{}
 		t.Lock()
 		if err != nil {
@@ -147,16 +158,20 @@ func (t *TaskPool) NewSearchFileTask(src string, key string, limit int) *Task {
 		}
 		task.Status = TaskStateComplete
 		t.Unlock()
+		if option.OnDone != nil {
+			option.OnDone(task.Id)
+		}
 	}()
 	return task
 }
 
 type CopyOption struct {
-	Src  string `json:"src"`
-	Dest string `json:"dest"`
+	Src        string          `json:"src"`
+	Dest       string          `json:"dest"`
+	OnComplete func(id string) `json:"-"`
 }
 
-func (t *TaskPool) NewCopyFileTask(options []*CopyOption) *Task {
+func (t *TaskPool) NewCopyFileTask(options []*CopyOption, OnDone func(id string)) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeCopy,
@@ -204,7 +219,7 @@ func (t *TaskPool) NewCopyFileTask(options []*CopyOption) *Task {
 		// update info
 		go func() {
 			var completeLength int64 = 0
-			var completeCount int = 0
+			var completeCount = 0
 			ticker := time.NewTicker(2 * time.Second)
 			var lastComplete int64 = 0
 			for {
@@ -267,11 +282,16 @@ func (t *TaskPool) NewCopyFileTask(options []*CopyOption) *Task {
 				t.Unlock()
 				return
 			}
+			if option.OnComplete != nil {
+				option.OnComplete(task.Id)
+			}
 		}
-
 		t.Lock()
 		task.Status = TaskStateComplete
 		t.Unlock()
+		if OnDone != nil {
+			OnDone(task.Id)
+		}
 	}()
 	return task
 }
@@ -296,13 +316,19 @@ type DeleteFileTaskOutput struct {
 	CurrentDelete string   `json:"current_delete"`
 }
 
-func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
+type NewDeleteFIleTaskOption struct {
+	Src            []string
+	OnDone         func(id string)
+	OnItemComplete func(id string, src string)
+}
+
+func (t *TaskPool) NewDeleteFileTask(option *NewDeleteFIleTaskOption) *Task {
 	task := &Task{
 		Id:     xid.New().String(),
 		Type:   TaskTypeDelete,
 		Status: TaskStateAnalyze,
 		Output: &DeleteFileTaskOutput{
-			Src: src,
+			Src: option.Src,
 		},
 		InterruptChan: make(chan struct{}),
 	}
@@ -313,7 +339,7 @@ func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
 		output := task.Output.(*DeleteFileTaskOutput)
 		// analyze
 		infos := make([]*CopyAnalyzeResult, 0)
-		for _, deleteSrc := range src {
+		for _, deleteSrc := range option.Src {
 			copyInfo, err := analyzeSource(deleteSrc)
 			if err != nil {
 				t.Lock()
@@ -339,9 +365,9 @@ func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
 		}
 		// update info
 		go func() {
-			var completeCount int = 0
+			var completeCount = 0
 			ticker := time.NewTicker(2 * time.Second)
-			var lastComplete int = 0
+			var lastComplete = 0
 			for {
 				select {
 				case currentFile := <-notifier.DeleteChan:
@@ -374,7 +400,7 @@ func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
 				}
 			}
 		}()
-		for _, deleteSrc := range src {
+		for _, deleteSrc := range option.Src {
 			err := Delete(deleteSrc, notifier)
 			if err != nil {
 				if err == DeleteInterrupt {
@@ -386,11 +412,17 @@ func (t *TaskPool) NewDeleteFileTask(src []string) *Task {
 				t.Unlock()
 				return
 			}
+			if option.OnItemComplete != nil {
+				option.OnItemComplete(task.Id, deleteSrc)
+			}
 		}
 
 		t.Lock()
 		task.Status = TaskStateComplete
 		t.Unlock()
+		if option.OnDone != nil {
+			option.OnDone(task.Id)
+		}
 	}()
 	return task
 }
