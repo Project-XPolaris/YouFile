@@ -92,27 +92,6 @@ var chmodFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	})
 }
 
-var searchFileHandler haruka.RequestHandler = func(context *haruka.Context) {
-	searchPath := context.GetQueryString("searchPath")
-	searchKey := context.GetQueryString("searchKey")
-	limit, err := context.GetQueryInt("limit")
-	if err != nil {
-		AbortErrorWithStatus(err, context, http.StatusBadRequest)
-		return
-	}
-	items, err := service.SearchFile(util.ConvertPathWithOS(searchPath), searchKey, nil, limit)
-	if err != nil {
-		AbortErrorWithStatus(err, context, http.StatusBadRequest)
-		return
-	}
-	data := template.NewFileListTemplateFromTargetFile(items)
-	err = context.JSON(data)
-	if err != nil {
-		AbortErrorWithStatus(err, context, http.StatusBadRequest)
-		return
-	}
-}
-
 var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 	searchPath := context.GetQueryString("searchPath")
 	searchKey := context.GetQueryString("searchKey")

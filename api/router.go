@@ -9,7 +9,6 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/path/rename", renameFileHandler)
 	e.Router.AddHandler("/path/download", downloadFileHandler)
 	e.Router.AddHandler("/path/chmod", chmodFileHandler)
-	e.Router.AddHandler("/path/search", searchFileHandler)
 	e.Router.AddHandler("/path/mkdir", createDirectoryHandler)
 	e.Router.AddHandler("/task/search", newSearchFileTaskHandler)
 	e.Router.AddHandler("/task/copy", newCopyFileTaskHandler)
