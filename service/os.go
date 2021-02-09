@@ -24,7 +24,7 @@ func GetStartPath() ([]RootPath, error) {
 	for _, disk := range disks {
 		paths = append(paths, RootPath{
 			Path: fmt.Sprintf("%s:\\", disk),
-			Name: fmt.Sprintf("Disk %s", disk),
+			Name: fmt.Sprintf("Disk (%s)", disk),
 		})
 	}
 	return paths, err

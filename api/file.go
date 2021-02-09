@@ -119,6 +119,7 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 			})
 		},
 	})
+	task.Run()
 	context.JSON(task)
 }
 
@@ -145,12 +146,16 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 			})
 		}
 	}
-	task := service.DefaultTask.NewCopyFileTask(requestBody.List, func(id string) {
-		DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-			"event": "CopyTaskComplete",
-			"id":    id,
-		})
+	task := service.DefaultTask.NewCopyTask(&service.NewCopyTaskOption{
+		Options: requestBody.List,
+		OnDone: func(id string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": "CopyTaskComplete",
+				"id":    id,
+			})
+		},
 	})
+	task.Run()
 	context.JSON(task)
 }
 
@@ -173,7 +178,11 @@ var stopTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var getTaskList haruka.RequestHandler = func(context *haruka.Context) {
-	tasks := service.DefaultTask.GetAllTask()
+	queryBuilder := service.TaskQueryBuilder{}
+	queryBuilder.WithOrder(context.GetQueryString("orderKey"), context.GetQueryString("order"))
+	queryBuilder.WithStatus(context.GetQueryStrings("status")...)
+	queryBuilder.WithTypes(context.GetQueryStrings("type")...)
+	tasks := queryBuilder.Query()
 	taskTemplates := make([]*template.TaskTemplate, 0)
 	for _, task := range tasks {
 		taskTemplates = append(taskTemplates, template.NewTaskTemplate(task))
@@ -210,7 +219,7 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	task := service.DefaultTask.NewDeleteFileTask(&service.NewDeleteFIleTaskOption{
+	task := service.DefaultTask.NewDeleteFileTask(&service.NewDeleteFileTaskOption{
 		Src: requestBody.List,
 		OnDone: func(id string) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
@@ -226,6 +235,7 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 			})
 		},
 	})
+	task.Run()
 	context.JSON(template.NewTaskTemplate(task))
 }
 

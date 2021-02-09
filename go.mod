@@ -3,6 +3,7 @@ module youfile
 go 1.15
 
 require (
+	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/allentom/haruka v0.0.0-20210204135613-5b31227f861c
 	github.com/d-tux/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/gorilla/websocket v1.4.2
