@@ -3,8 +3,8 @@ package api
 import "github.com/allentom/haruka"
 
 func SetRouter(e *haruka.Engine) {
-	e.Router.AddHandler("/path/read", readDirHandler)
-	e.Router.AddHandler("/path/copy", copyFileHandler)
+	e.Router.GET("/path/read", readDirHandler)
+	e.Router.POST("/path/copy", copyFileHandler)
 	e.Router.AddHandler("/path/remove", deleteFileHandler)
 	e.Router.AddHandler("/path/rename", renameFileHandler)
 	e.Router.AddHandler("/path/download", downloadFileHandler)

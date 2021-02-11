@@ -1,0 +1,5 @@
+From 'golang'
+Run mkdir -p /app
+ADD ./app /app
+WORKDIR /app
+ENTRYPOINT './main'
