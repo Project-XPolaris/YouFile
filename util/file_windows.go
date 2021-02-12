@@ -1,5 +1,7 @@
 package util
 
+import "syscall"
+
 func ReadWindowsDisks() ([]string, error) {
 	kernel32, _ := syscall.LoadLibrary("kernel32.dll")
 	getLogicalDrivesHandle, _ := syscall.GetProcAddress(kernel32, "GetLogicalDrives")

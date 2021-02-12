@@ -120,7 +120,8 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 		},
 	})
 	task.Run()
-	context.JSON(task)
+	taskTemplate := template.NewTaskTemplate(task)
+	context.JSON(taskTemplate)
 }
 
 type CreateTaskRequestBody struct {
