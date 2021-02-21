@@ -111,12 +111,12 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 			})
 		},
 		OnHit: func(id string, path string, name string) {
-			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-				"event": "SearchHit",
-				"id":    id,
-				"path":  path,
-				"name":  name,
-			})
+			//DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+			//	"event": "SearchHit",
+			//	"id":    id,
+			//	"path":  path,
+			//	"name":  name,
+			//})
 		},
 	})
 	task.Run()
