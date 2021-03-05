@@ -110,16 +110,8 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 				"id":    id,
 			})
 		},
-		OnHit: func(id string, path string, name string) {
-			//DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-			//	"event": "SearchHit",
-			//	"id":    id,
-			//	"path":  path,
-			//	"name":  name,
-			//})
-		},
 	})
-	task.Run()
+	go task.Run()
 	taskTemplate := template.NewTaskTemplate(task)
 	context.JSON(taskTemplate)
 }
@@ -156,7 +148,7 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 			})
 		},
 	})
-	task.Run()
+	go task.Run()
 	context.JSON(task)
 }
 
@@ -236,7 +228,7 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 			})
 		},
 	})
-	task.Run()
+	go task.Run()
 	context.JSON(template.NewTaskTemplate(task))
 }
 
