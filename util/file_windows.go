@@ -1,8 +1,12 @@
 package util
 
-import "syscall"
+import (
+	"os"
+	"path/filepath"
+	"syscall"
+)
 
-func ReadWindowsDisks() ([]string, error) {
+func ReadDisks() ([]string, error) {
 	kernel32, _ := syscall.LoadLibrary("kernel32.dll")
 	getLogicalDrivesHandle, _ := syscall.GetProcAddress(kernel32, "GetLogicalDrives")
 
@@ -15,4 +19,35 @@ func ReadWindowsDisks() ([]string, error) {
 	}
 
 	return drives, nil
+}
+
+type StartDirectory struct {
+	Name string
+	Path string
+}
+
+func ReadStartDirectory() []*StartDirectory {
+	directories := make([]*StartDirectory, 0)
+
+	//user root
+	homePath, err := os.UserHomeDir()
+	if err == nil {
+		directories = append(directories, &StartDirectory{
+			Name: "Home",
+			Path: homePath,
+		})
+	}
+	directories = append(directories, &StartDirectory{
+		Name: "Desktop",
+		Path: filepath.Join(os.Getenv("USERPROFILE"), "Desktop"),
+	})
+	directories = append(directories, &StartDirectory{
+		Name: "Downloads",
+		Path: filepath.Join(os.Getenv("USERPROFILE"), "Downloads"),
+	})
+	directories = append(directories, &StartDirectory{
+		Name: "Documents",
+		Path: filepath.Join(os.Getenv("USERPROFILE"), "Documents"),
+	})
+	return directories
 }

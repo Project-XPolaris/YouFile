@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allentom/haruka"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"path/filepath"
 	"youfile/service"
@@ -110,16 +111,18 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 				"id":    id,
 			})
 		},
-		OnHit: func(id string, path string, name string) {
-			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-				"event": "SearchHit",
-				"id":    id,
-				"path":  path,
-				"name":  name,
-			})
+		OnHit: func(id string, path string, name string, filetype string) {
+			logrus.Info(name)
+			//DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+			//	"event": "SearchHit",
+			//	"id":    id,
+			//	"path":  path,
+			//	"name":  name,
+			//	"type":  filetype,
+			//})
 		},
 	})
-	task.Run()
+	go task.Run()
 	taskTemplate := template.NewTaskTemplate(task)
 	context.JSON(taskTemplate)
 }

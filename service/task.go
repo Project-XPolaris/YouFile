@@ -205,7 +205,7 @@ type NewSearchTaskOption struct {
 	Key    string
 	Limit  int
 	OnDone func(id string)
-	OnHit  func(id string, path string, name string)
+	OnHit  func(id string, path string, name string, itemType string)
 }
 
 type SearchFileTask struct {
@@ -245,7 +245,11 @@ func (t *SearchFileTask) Run() {
 				t.Lock()
 				t.Output.Files = append(t.Output.Files, file)
 				if t.Option.OnHit != nil {
-					t.Option.OnHit(t.Id, file.Path, filepath.Base(file.Path))
+					fileType := "Directory"
+					if !file.Info.IsDir() {
+						fileType = "File"
+					}
+					t.Option.OnHit(t.Id, file.Path, filepath.Base(file.Path), fileType)
 				}
 				t.Unlock()
 			case <-t.InterruptChan:
