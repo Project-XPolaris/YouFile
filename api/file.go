@@ -3,9 +3,12 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/allentom/haruka"
+	"github.com/d-tux/go-fstab"
 	"net/http"
 	"path/filepath"
+	"youfile/config"
 	"youfile/service"
 	"youfile/template"
 	"youfile/util"
@@ -263,6 +266,14 @@ var umountHandler haruka.RequestHandler = func(context *haruka.Context) {
 
 var fstabMountListHandler haruka.RequestHandler = func(context *haruka.Context) {
 	data := service.DefaultFstab.Mounts
+	linq.From(data).Where(func(i interface{}) bool {
+		for _, point := range config.Instance.MountPoints {
+			if point == i.(*fstab.Mount).File {
+				return true
+			}
+		}
+		return false
+	}).ToSlice(&data)
 	context.JSON(template.MountTemplateFromList(data))
 }
 
@@ -275,6 +286,12 @@ var fstabAddMountHandler haruka.RequestHandler = func(context *haruka.Context) {
 	}
 	service.DefaultFstab.AddMount(&requestBody)
 	err = service.DefaultFstab.Save()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	config.Instance.MountPoints = append(config.Instance.MountPoints, requestBody.File)
+	err = config.SaveMounts()
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
 		return
@@ -297,6 +314,14 @@ var fstabRemoveMountHandler haruka.RequestHandler = func(context *haruka.Context
 		return
 	}
 	err = service.DefaultFstab.Save()
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	linq.From(config.Instance.MountPoints).Where(func(i interface{}) bool {
+		return i.(string) != dirPath
+	}).ToSlice(&config.Instance.MountPoints)
+	err = config.SaveMounts()
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
 		return

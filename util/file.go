@@ -70,3 +70,8 @@ func bitsToDrives(bitMap uint32) (drives []string) {
 	}
 	return
 }
+
+type StartDirectory struct {
+	Name string
+	Path string
+}

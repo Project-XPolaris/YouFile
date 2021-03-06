@@ -16,7 +16,7 @@ type Fstab struct {
 }
 
 func LoadFstab() error {
-	mounts, err := fstab.ParseFile(config.Config.FstabPath)
+	mounts, err := fstab.ParseFile(config.Instance.FstabPath)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (f *Fstab) RemoveMount(file string) error {
 	return nil
 }
 func (f *Fstab) Save() error {
-	file, err := os.Create(config.Config.FstabPath)
+	file, err := os.Create(config.Instance.FstabPath)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (f *Fstab) Save() error {
 }
 
 func (f *Fstab) Reload() error {
-	out, err := exec.Command("mount", "-a").Output()
+	out, err := exec.Command("mount", "--fstab", config.Instance.FstabPath, "-a").Output()
 	if err != nil {
 		return err
 	}

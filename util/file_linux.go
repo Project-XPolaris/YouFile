@@ -1,5 +1,7 @@
 package util
 
+import "os"
+
 func ReadDisks() ([]string, error) {
 	return nil, nil
 }
@@ -12,7 +14,7 @@ func ReadStartDirectory() []*StartDirectory {
 	if err == nil {
 		directories = append(directories, &StartDirectory{
 			Name: "Home",
-			path: homePath,
+			Path: homePath,
 		})
 	}
 	return directories

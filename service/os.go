@@ -15,7 +15,7 @@ type RootPath struct {
 
 func GetStartPath() ([]RootPath, error) {
 	if runtime.GOOS != "windows" {
-		return []RootPath{{Path: string(filepath.Separator), Name: "System Root"}}, nil
+		return []RootPath{{Path: string(filepath.Separator), Name: "System Root", Type: "Directory"}}, nil
 	}
 	disks, err := util.ReadDisks()
 	if err != nil {

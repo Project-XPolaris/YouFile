@@ -21,11 +21,6 @@ func ReadDisks() ([]string, error) {
 	return drives, nil
 }
 
-type StartDirectory struct {
-	Name string
-	Path string
-}
-
 func ReadStartDirectory() []*StartDirectory {
 	directories := make([]*StartDirectory, 0)
 

@@ -16,7 +16,7 @@ func MountCIFS(option MountCIFSOption) error {
 	parts := make([]string, 0)
 	parts = append(parts, "-t", "cifs")
 	if len(option.Username) > 0 && len(option.Password) > 0 {
-		parts = append(parts, "-o", fmt.Sprintf("username=%s,password=%s", option.Username, option.Password))
+		parts = append(parts, "-o", fmt.Sprintf("username=%s,password=%s,dir_mode=0777,file_mode=0777", option.Username, option.Password))
 	}
 	parts = append(parts, option.RemotePath, option.MountPath)
 	out, err := exec.Command("mount", parts...).Output()

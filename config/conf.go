@@ -1,26 +1,45 @@
 package config
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
-var Config AppConfig
+var Instance AppConfig
+var Manager = viper.New()
+var Logger = logrus.WithField("scope", "config")
 
 type AppConfig struct {
-	Addr      string `json:"addr"`
-	FstabPath string `json:"fstab_path"`
+	Addr        string
+	FstabPath   string
+	MountPoints []string
 }
 
 func LoadAppConfig() error {
-	jsonFile, err := os.Open("config.json")
+	Manager.AddConfigPath("./")
+	Manager.SetConfigName("config")
+	Manager.SetConfigType("json")
+
+	err := Manager.ReadInConfig()
 	if err != nil {
 		return err
 	}
-	defer jsonFile.Close()
-	raw, _ := ioutil.ReadAll(jsonFile)
+	Manager.SetDefault("addr", ":8300")
+	Manager.SetDefault("fstab.path", "/etc/fstab")
+	Manager.SetDefault("mountpoint", []string{})
 
-	err = json.Unmarshal(raw, &Config)
-	return err
+	Instance.Addr = Manager.GetString("addr")
+	Instance.FstabPath = Manager.GetString("fstab.path")
+	Instance.MountPoints = Manager.GetStringSlice("mountpoint")
+	return nil
+}
+
+func SaveConfig() error {
+	Logger.Info("save info")
+	return Manager.WriteConfig()
+}
+
+func SaveMounts() error {
+	Manager.Set("mountpoint", Instance.MountPoints)
+	return SaveConfig()
 }
