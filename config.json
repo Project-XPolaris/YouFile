@@ -1,4 +1,6 @@
 {
   "addr": ":8300",
-  "fstab_path": "/etc/fstab"
+  "fstab": {
+    "path": "./fstab"
+  }
 }

@@ -13,6 +13,15 @@ var WebsocketLogger = logrus.New().WithField("scope", "websocket")
 var DefaultNotificationManager = NotificationManager{
 	Conns: map[string]*NotificationConnection{},
 }
+var (
+	EventUnarchiveComplete  = "UnarchiveTaskComplete"
+	EventArchiveComplete    = "ArchiveTaskComplete"
+	EventCopyTaskComplete   = "CopyTaskComplete"
+	EventCopyItemComplete   = "CopyItemComplete"
+	EventSearchTaskComplete = "SearchTaskComplete"
+	EventDeleteTaskDone     = "DeleteTaskDone"
+	EventDeleteItemComplete = "DeleteItemComplete"
+)
 
 type NotificationConnection struct {
 	Id         string
