@@ -27,10 +27,12 @@ var newUnarchiveTaskHandler haruka.RequestHandler = func(context *haruka.Context
 		requestBody.Target = filepath.Join(filepath.Dir(requestBody.Source), dirName)
 	}
 	task := service.DefaultTask.NewUnarchiveTask(requestBody.Source, requestBody.Target, func(id string, target string) {
+		dir, _ := filepath.Split(target)
 		DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-			"event":  EventUnarchiveComplete,
-			"id":     id,
-			"target": target,
+			"event":   EventUnarchiveComplete,
+			"id":      id,
+			"target":  target,
+			"context": dir,
 		})
 	})
 	go task.Run()
