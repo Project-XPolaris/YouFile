@@ -1,10 +1,22 @@
 package service
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/ahmetb/go-linq/v3"
+	"github.com/nfnt/resize"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"image"
+	"image/jpeg"
+	"image/png"
+	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func ReadDir(readPath string) ([]os.FileInfo, error) {
@@ -134,4 +146,168 @@ func Delete(src string, notifier *DeleteNotifier) error {
 func NewDirectory(dirPath string, perm int) error {
 	err := AppFs.MkdirAll(dirPath, os.FileMode(perm))
 	return err
+}
+
+func NewTextFile(path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WriteTextFile(path string, content string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.WriteString(content)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ReadFileAsString(path string) (string, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	text := string(content)
+	return text, nil
+}
+func GetFileCheckSum(path string) (string, error) {
+	file, err := os.Open(path)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+
+	hash := md5.New()
+	_, err = io.Copy(hash, file)
+
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+func createThumbnailImage(path string, saveName string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	ext := filepath.Ext(path)
+	ext = strings.ToLower(ext)
+
+	var decoder func(r io.Reader) (image.Image, error)
+	if ext == ".jpg" || ext == ".jpeg" {
+		decoder = jpeg.Decode
+	}
+	if ext == ".png" {
+		decoder = png.Decode
+	}
+	if decoder == nil {
+		return nil
+	}
+
+	img, err := decoder(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	file.Close()
+
+	// resize to width 1000 using Lanczos resampling
+	// and preserve aspect ratio
+	m := resize.Resize(240, 0, img, resize.Lanczos3)
+
+	out, err := os.Create(filepath.Join("./thumbnails", saveName))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	if ext == ".jpg" || ext == ".jpeg" {
+		err = jpeg.Encode(out, m, nil)
+		if err != nil {
+			return err
+		}
+	}
+	if ext == ".png" {
+		err = png.Encode(out, m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+var AllowGenerateThumbnailImageExtensions = []string{
+	".jpg", ".png", ".jpeg",
+}
+
+func GenerateImageThumbnail(rootPath string, onComplete func()) error {
+	err := os.MkdirAll("./thumbnails", os.ModePerm)
+	if err != nil {
+		return err
+	}
+	items, err := afero.ReadDir(AppFs, rootPath)
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if item.IsDir() {
+			continue
+		}
+		itemPath := filepath.Join(rootPath, item.Name())
+		if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(filepath.Ext(itemPath)) {
+			continue
+		}
+		sum, err := GetFileCheckSum(itemPath)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		isExist, _ := afero.Exists(AppFs, filepath.Join("./thumbnails", fmt.Sprintf("%s%s", sum, filepath.Ext(item.Name()))))
+		if isExist {
+			logrus.Info("skip thumbnail exist")
+			continue
+		}
+		thumbnailFilename := fmt.Sprintf("%s%s", sum, filepath.Ext(item.Name()))
+		err = createThumbnailImage(itemPath, thumbnailFilename)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+	}
+	onComplete()
+	return nil
+}
+
+func GetFileThumbnail(path string) (string, error) {
+	if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(filepath.Ext(path)) {
+		return "", nil
+	}
+	sum, err := GetFileCheckSum(path)
+	if err != nil {
+		return "", err
+	}
+	thumbnailFilename := fmt.Sprintf("%s%s", sum, filepath.Ext(path))
+	isExist, err := afero.Exists(AppFs, filepath.Join("./thumbnails", thumbnailFilename))
+	if err != nil {
+		return "", err
+	}
+	if isExist {
+		return thumbnailFilename, nil
+	}
+	return "", nil
 }

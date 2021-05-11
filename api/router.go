@@ -10,6 +10,9 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.AddHandler("/path/download", downloadFileHandler)
 	e.Router.AddHandler("/path/chmod", chmodFileHandler)
 	e.Router.AddHandler("/path/mkdir", createDirectoryHandler)
+	e.Router.POST("/path/newFile", newTextFileHandler)
+	e.Router.POST("/path/writeFile", writeFileHandler)
+	e.Router.GET("/path/readFile", readAsTextFileHandler)
 	e.Router.AddHandler("/task/search", newSearchFileTaskHandler)
 	e.Router.AddHandler("/task/copy", newCopyFileTaskHandler)
 	e.Router.AddHandler("/task/unarchive", newUnarchiveTaskHandler)
@@ -26,5 +29,6 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/fstab/reload", fstabReMountHandler)
 	e.Router.GET("/info", readOSInfoDirHandler)
 	e.Router.GET("/files", getFileHandler)
+	e.Router.GET("/thumbnails", getFileThumbnailHandler)
 	e.Router.AddHandler("/notification", notificationSocketHandler)
 }

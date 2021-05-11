@@ -24,6 +24,12 @@ var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
+	go service.GenerateImageThumbnail(readPath, func() {
+		DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+			"event": GenerateThumbnailComplete,
+			"path":  readPath,
+		})
+	})
 	data := template.NewFileListTemplate(items, readPath)
 	err = context.JSON(data)
 	if err != nil {

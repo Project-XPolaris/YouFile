@@ -14,13 +14,14 @@ var DefaultNotificationManager = NotificationManager{
 	Conns: map[string]*NotificationConnection{},
 }
 var (
-	EventUnarchiveComplete  = "UnarchiveTaskComplete"
-	EventArchiveComplete    = "ArchiveTaskComplete"
-	EventCopyTaskComplete   = "CopyTaskComplete"
-	EventCopyItemComplete   = "CopyItemComplete"
-	EventSearchTaskComplete = "SearchTaskComplete"
-	EventDeleteTaskDone     = "DeleteTaskDone"
-	EventDeleteItemComplete = "DeleteItemComplete"
+	EventUnarchiveComplete    = "UnarchiveTaskComplete"
+	EventArchiveComplete      = "ArchiveTaskComplete"
+	EventCopyTaskComplete     = "CopyTaskComplete"
+	EventCopyItemComplete     = "CopyItemComplete"
+	EventSearchTaskComplete   = "SearchTaskComplete"
+	EventDeleteTaskDone       = "DeleteTaskDone"
+	EventDeleteItemComplete   = "DeleteItemComplete"
+	GenerateThumbnailComplete = "GenerateThumbnailComplete"
 )
 
 type NotificationConnection struct {

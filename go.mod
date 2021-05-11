@@ -10,6 +10,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/kardianos/service v1.2.0
 	github.com/mholt/archiver/v3 v3.5.0
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/rs/xid v1.2.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.4.1

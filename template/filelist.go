@@ -7,10 +7,11 @@ import (
 )
 
 type FileItem struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Path string `json:"path"`
-	Size int64  `json:"size"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Path      string `json:"path"`
+	Size      int64  `json:"size"`
+	Thumbnail string `json:"thumbnail,omitempty"`
 }
 type FileListTemplate struct {
 	Result []FileItem `json:"result"`
@@ -29,6 +30,8 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTempl
 			item.Type = "Directory"
 		} else {
 			item.Type = "File"
+			thumbnailName, _ := service.GetFileThumbnail(item.Path)
+			item.Thumbnail = thumbnailName
 		}
 		items = append(items, item)
 	}
