@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"youfile/database"
 )
 
 func ReadDir(readPath string) ([]os.FileInfo, error) {
@@ -288,6 +289,7 @@ func GenerateImageThumbnail(rootPath string, onComplete func()) error {
 			logrus.Error(err)
 			continue
 		}
+		database.Instance.Create(&database.Thumbnail{Path: itemPath, Checksum: sum})
 	}
 	onComplete()
 	return nil
@@ -310,4 +312,36 @@ func GetFileThumbnail(path string) (string, error) {
 		return thumbnailFilename, nil
 	}
 	return "", nil
+}
+
+type ClearThumbnailOption struct {
+	All bool `hsource:"query" hname:"all"`
+}
+
+func ClearThumbnail(option ClearThumbnailOption) error {
+	var err error
+	if option.All {
+		err = os.RemoveAll("./thumbnails")
+		if err != nil {
+			return err
+		}
+		err = database.Instance.Model(&database.Thumbnail{}).Unscoped().Where("id != ?", -1).Delete(&database.Thumbnail{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	var thumbnails []database.Thumbnail
+	err = database.Instance.Find(&thumbnails).Error
+	if err != nil {
+		return err
+	}
+	for _, thumbnail := range thumbnails {
+		isExist, _ := afero.Exists(AppFs, thumbnail.Path)
+		if !isExist {
+			os.Remove(filepath.Join("./thumbnails", fmt.Sprintf("%s%s", thumbnail.Checksum, filepath.Ext(thumbnail.Path))))
+			database.Instance.Model(&database.Thumbnail{}).Unscoped().Delete(thumbnail)
+		}
+	}
+	return nil
 }

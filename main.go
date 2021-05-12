@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"youfile/api"
 	"youfile/config"
+	"youfile/database"
 	"youfile/service"
 )
 
@@ -32,6 +33,10 @@ func Program() {
 		log.Fatal(err)
 	}
 	err = service.LoadFstab()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = database.ConnectToDatabase()
 	if err != nil {
 		log.Fatal(err)
 	}

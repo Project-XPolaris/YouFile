@@ -30,5 +30,6 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/info", readOSInfoDirHandler)
 	e.Router.GET("/files", getFileHandler)
 	e.Router.GET("/thumbnails", getFileThumbnailHandler)
+	e.Router.POST("/thumbnails/clear", clearThumbnailHandler)
 	e.Router.AddHandler("/notification", notificationSocketHandler)
 }
