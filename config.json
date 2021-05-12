@@ -2,5 +2,9 @@
   "addr": ":8300",
   "fstab": {
     "path": "./fstab"
-  }
+  },
+  "fstab_path": "./fstab",
+  "mountpoint": [
+    "/mnt/images"
+  ]
 }

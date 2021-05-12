@@ -270,7 +270,7 @@ func GenerateImageThumbnail(rootPath string, onComplete func()) error {
 			continue
 		}
 		itemPath := filepath.Join(rootPath, item.Name())
-		if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(filepath.Ext(itemPath)) {
+		if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(strings.ToLower(filepath.Ext(itemPath))) {
 			continue
 		}
 		sum, err := GetFileCheckSum(itemPath)
@@ -296,7 +296,7 @@ func GenerateImageThumbnail(rootPath string, onComplete func()) error {
 }
 
 func GetFileThumbnail(path string) (string, error) {
-	if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(filepath.Ext(path)) {
+	if !linq.From(AllowGenerateThumbnailImageExtensions).Contains(strings.ToLower(filepath.Ext(path))) {
 		return "", nil
 	}
 	sum, err := GetFileCheckSum(path)

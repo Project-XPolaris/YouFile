@@ -19,17 +19,21 @@ var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 	if len(readPath) == 0 {
 		readPath = "/"
 	}
+	thumbnail := context.GetQueryString("thumbnail")
+
 	items, err := service.ReadDir(util.ConvertPathWithOS(readPath))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	go service.GenerateImageThumbnail(readPath, func() {
-		DefaultNotificationManager.sendJSONToAll(haruka.JSON{
-			"event": GenerateThumbnailComplete,
-			"path":  readPath,
+	if thumbnail != "0" {
+		go service.GenerateImageThumbnail(readPath, func() {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": GenerateThumbnailComplete,
+				"path":  readPath,
+			})
 		})
-	})
+	}
 	data := template.NewFileListTemplate(items, readPath)
 	err = context.JSON(data)
 	if err != nil {
