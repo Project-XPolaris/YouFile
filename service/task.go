@@ -206,11 +206,12 @@ type SearchFileOutput struct {
 	Files []TargetFile
 }
 type NewSearchTaskOption struct {
-	Src    string
-	Key    string
-	Limit  int
-	OnDone func(id string)
-	OnHit  func(id string, path string, name string, itemType string)
+	Src       string
+	Key       string
+	Limit     int
+	OnDone    func(id string)
+	OnHit     func(id string, path string, name string, itemType string)
+	PathTrans string
 }
 
 type SearchFileTask struct {
@@ -248,6 +249,7 @@ func (t *SearchFileTask) Run() {
 			select {
 			case file := <-notifier.HitChan:
 				t.Lock()
+				file.PathTrans = t.Option.PathTrans
 				t.Output.Files = append(t.Output.Files, file)
 				if t.Option.OnHit != nil {
 					fileType := "Directory"

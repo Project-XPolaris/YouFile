@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"youfile/config"
 	"youfile/util"
+	"youfile/youplus"
 )
 
 type RootPath struct {
@@ -13,7 +15,22 @@ type RootPath struct {
 	Type string `json:"type"`
 }
 
-func GetStartPath() ([]RootPath, error) {
+func GetStartPath(token string) ([]RootPath, error) {
+	if config.Instance.YouPlusPath {
+		response, err := youplus.DefaultClient.ReadDir("/", token)
+		if err != nil {
+			return nil, err
+		}
+		items := make([]RootPath, 0)
+		for _, item := range response {
+			items = append(items, RootPath{
+				Name: filepath.Join(item.Path),
+				Type: item.Type,
+				Path: item.Path,
+			})
+		}
+		return items, nil
+	}
 	if runtime.GOOS != "windows" {
 		return []RootPath{{Path: string(filepath.Separator), Name: "System Root", Type: "Directory"}}, nil
 	}

@@ -8,6 +8,7 @@ import (
 func RunApiService() {
 	engine := haruka.NewEngine()
 	engine.UseMiddleware(middleware.NewLoggerMiddleware())
+	engine.UseMiddleware(&AuthMiddleware{})
 	SetRouter(engine)
 	engine.RunAndListen(":8300")
 }

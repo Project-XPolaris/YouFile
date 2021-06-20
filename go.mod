@@ -6,6 +6,7 @@ require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/allentom/haruka v0.0.0-20210318094355-e84d0a169cfa
 	github.com/d-tux/go-fstab v0.0.0-20141204152952-eb4090f26517
+	github.com/go-resty/resty/v2 v2.6.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/kardianos/service v1.2.0
@@ -16,6 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.4.1
 	github.com/spf13/viper v1.7.1
+	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744 // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.9

@@ -3,6 +3,8 @@ package template
 import (
 	"os"
 	"path/filepath"
+	"strings"
+	"youfile/config"
 	"youfile/service"
 )
 
@@ -38,12 +40,17 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTempl
 	return &FileListTemplate{Result: items, Sep: string(filepath.Separator)}
 }
 
-func NewFileListTemplateFromTargetFile(result []service.TargetFile) *FileListTemplate {
+func NewFileListTemplateFromTargetFile(result []service.TargetFile, src string) *FileListTemplate {
+
 	items := make([]FileItem, 0)
 	for _, targetFile := range result {
+		targetPath := targetFile.Path
+		if config.Instance.YouPlusPath {
+			targetPath = strings.Replace(targetPath, src, targetFile.PathTrans, 1)
+		}
 		item := FileItem{
 			Name: targetFile.Info.Name(),
-			Path: targetFile.Path,
+			Path: targetPath,
 			Size: targetFile.Info.Size(),
 		}
 		if targetFile.Info.IsDir() {

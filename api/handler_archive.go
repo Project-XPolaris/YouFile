@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"youfile/config"
 	"youfile/service"
 )
 
@@ -20,6 +21,20 @@ var newUnarchiveTaskHandler haruka.RequestHandler = func(context *haruka.Context
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
+	}
+	if config.Instance.YouPlusPath {
+		requestBody.Source, err = service.GetRealPath(requestBody.Source, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		if len(requestBody.Target) > 0 && !requestBody.InPlace {
+			requestBody.Target, err = service.GetRealPath(requestBody.Target, context.Param["token"].(string))
+			if err != nil {
+				AbortErrorWithStatus(err, context, http.StatusBadRequest)
+				return
+			}
+		}
 	}
 	if requestBody.InPlace {
 		ext := filepath.Ext(requestBody.Source)

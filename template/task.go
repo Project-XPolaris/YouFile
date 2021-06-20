@@ -34,7 +34,7 @@ func NewTaskTemplate(task service.Task) *TaskTemplate {
 func SerializeTaskOutput(data interface{}) interface{} {
 	switch v := data.(type) {
 	case *service.SearchFileTask:
-		return SerializeSearchFileOutput(v.Output)
+		return SerializeSearchFileOutput(v.Output, v.Option.Src)
 	case *service.CopyTask:
 		return v.Output
 	case *service.DeleteFileTask:
@@ -47,6 +47,6 @@ func SerializeTaskOutput(data interface{}) interface{} {
 		return data
 	}
 }
-func SerializeSearchFileOutput(data *service.SearchFileOutput) interface{} {
-	return NewFileListTemplateFromTargetFile(data.Files)
+func SerializeSearchFileOutput(data *service.SearchFileOutput, src string) interface{} {
+	return NewFileListTemplateFromTargetFile(data.Files, src)
 }

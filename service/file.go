@@ -13,7 +13,6 @@ import (
 	"image/png"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -221,7 +220,7 @@ func createThumbnailImage(path string, saveName string) error {
 
 	img, err := decoder(file)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	file.Close()
@@ -232,7 +231,7 @@ func createThumbnailImage(path string, saveName string) error {
 
 	out, err := os.Create(filepath.Join("./thumbnails", saveName))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer out.Close()
 

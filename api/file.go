@@ -16,18 +16,20 @@ import (
 
 var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 	readPath := context.GetQueryString("readPath")
-	if len(readPath) == 0 {
-		readPath = "/"
+	realPath, err := service.GetRealPath(readPath, context.Param["token"].(string))
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
 	}
 	thumbnail := context.GetQueryString("thumbnail")
 
-	items, err := service.ReadDir(util.ConvertPathWithOS(readPath))
+	items, err := service.ReadDir(util.ConvertPathWithOS(realPath))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
 	if thumbnail != "0" {
-		go service.GenerateImageThumbnail(readPath, func() {
+		go service.GenerateImageThumbnail(realPath, func() {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": GenerateThumbnailComplete,
 				"path":  readPath,
@@ -43,10 +45,23 @@ var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	src := context.GetQueryString("src")
 	dest := context.GetQueryString("dest")
+	if config.Instance.YouPlusPath {
+		src, err = service.GetRealPath(src, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		dest, err = service.GetRealPath(dest, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
+	err = service.Copy(util.ConvertPathWithOS(src), util.ConvertPathWithOS(dest), nil)
 
-	err := service.Copy(util.ConvertPathWithOS(src), util.ConvertPathWithOS(dest), nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
@@ -58,8 +73,16 @@ var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var deleteFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	target := context.GetQueryString("target")
-	err := service.DeleteFile(target)
+	if config.Instance.YouPlusPath {
+		target, err = service.GetRealPath(target, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
+	err = service.DeleteFile(target)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -70,9 +93,22 @@ var deleteFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var renameFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	newName := context.GetQueryString("new")
 	oldName := context.GetQueryString("old")
-	err := service.Rename(util.ConvertPathWithOS(oldName), util.ConvertPathWithOS(newName))
+	if config.Instance.YouPlusPath {
+		newName, err = service.GetRealPath(newName, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		oldName, err = service.GetRealPath(oldName, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
+	err = service.Rename(util.ConvertPathWithOS(oldName), util.ConvertPathWithOS(newName))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -83,7 +119,15 @@ var renameFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var downloadFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	targetPath := context.GetQueryString("targetPath")
+	if config.Instance.YouPlusPath {
+		targetPath, err = service.GetRealPath(targetPath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
 	context.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(util.ConvertPathWithOS(targetPath))))
 	http.ServeFile(context.Writer, context.Request, targetPath)
 }
@@ -94,6 +138,13 @@ var chmodFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
+	}
+	if config.Instance.YouPlusPath {
+		target, err = service.GetRealPath(target, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
 	}
 	err = service.Chmod(util.ConvertPathWithOS(target), perm)
 	if err != nil {
@@ -113,8 +164,16 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
+	realPath := searchPath
+	if config.Instance.YouPlusPath {
+		realPath, err = service.GetRealPath(searchPath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
 	task := service.DefaultTask.NewSearchFileTask(&service.NewSearchTaskOption{
-		Src:   searchPath,
+		Src:   realPath,
 		Key:   searchKey,
 		Limit: limit,
 		OnDone: func(id string) {
@@ -123,6 +182,7 @@ var newSearchFileTaskHandler haruka.RequestHandler = func(context *haruka.Contex
 				"id":    id,
 			})
 		},
+		PathTrans: searchPath,
 	})
 	go task.Run()
 	taskTemplate := template.NewTaskTemplate(task)
@@ -141,8 +201,18 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 		return
 	}
 	for _, option := range requestBody.List {
-		option.Src = util.ConvertPathWithOS(option.Src)
-		option.Dest = util.ConvertPathWithOS(option.Dest)
+		realSrc, err := service.GetRealPath(option.Src, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		realDest, err := service.GetRealPath(option.Dest, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		option.Src = util.ConvertPathWithOS(realSrc)
+		option.Dest = util.ConvertPathWithOS(realDest)
 		option.OnComplete = func(id string) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": EventCopyItemComplete,
@@ -204,7 +274,12 @@ var createDirectoryHandler haruka.RequestHandler = func(context *haruka.Context)
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
-	err = service.NewDirectory(util.ConvertPathWithOS(dirPath), perm)
+	realPath, err := service.GetRealPath(dirPath, context.Param["token"].(string))
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	err = service.NewDirectory(realPath, perm)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
@@ -225,8 +300,19 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
+	realDeletePath := make([]string, 0)
+	realPathMapping := map[string]string{}
+	for _, deletePath := range requestBody.List {
+		realPath, err := service.GetRealPath(deletePath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		realDeletePath = append(realDeletePath, realPath)
+		realPathMapping[realPath] = deletePath
+	}
 	task := service.DefaultTask.NewDeleteFileTask(&service.NewDeleteFileTaskOption{
-		Src: requestBody.List,
+		Src: realDeletePath,
 		OnDone: func(id string) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": EventDeleteTaskDone,
@@ -237,7 +323,7 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": EventDeleteItemComplete,
 				"id":    id,
-				"src":   src,
+				"src":   realPathMapping[src],
 			})
 		},
 	})
@@ -251,6 +337,13 @@ var mountCifsHandler haruka.RequestHandler = func(context *haruka.Context) {
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
+	}
+	if config.Instance.YouPlusPath {
+		requestBody.MountPath, err = service.GetRealPath(requestBody.MountPath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
 	}
 	err = service.MountCIFS(requestBody)
 	if err != nil {
@@ -368,7 +461,7 @@ type OSInfoResponse struct {
 }
 
 var readOSInfoDirHandler haruka.RequestHandler = func(context *haruka.Context) {
-	paths, err := service.GetStartPath()
+	paths, err := service.GetStartPath(context.Param["token"].(string))
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
 		return
@@ -381,6 +474,14 @@ var readOSInfoDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var getFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	targetPath := context.GetQueryString("target")
+	if config.Instance.YouPlusPath {
+		targetPath, err = service.GetRealPath(targetPath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
 	http.ServeFile(context.Writer, context.Request, targetPath)
 }

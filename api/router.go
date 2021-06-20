@@ -28,8 +28,11 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.DELETE("/fstab/mounts", fstabRemoveMountHandler)
 	e.Router.GET("/fstab/reload", fstabReMountHandler)
 	e.Router.GET("/info", readOSInfoDirHandler)
+	e.Router.GET("/service/info", infoHandler)
 	e.Router.GET("/files", getFileHandler)
 	e.Router.GET("/thumbnails", getFileThumbnailHandler)
 	e.Router.POST("/thumbnails/clear", clearThumbnailHandler)
+	e.Router.POST("/user/auth", youPlusLoginHandler)
+	e.Router.GET("/user/auth", youPlusLoginHandler)
 	e.Router.AddHandler("/notification", notificationSocketHandler)
 }

@@ -13,8 +13,9 @@ type SearchFileNotifier struct {
 	StopFlag bool
 }
 type TargetFile struct {
-	Path string
-	Info os.FileInfo
+	Path      string
+	Info      os.FileInfo
+	PathTrans string
 }
 
 var (

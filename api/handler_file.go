@@ -4,6 +4,7 @@ import (
 	"github.com/allentom/haruka"
 	"net/http"
 	"path/filepath"
+	"youfile/config"
 	"youfile/service"
 )
 
@@ -17,6 +18,13 @@ var newTextFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
+	}
+	if config.Instance.YouPlusPath {
+		requestBody.FilePath, err = service.GetRealPath(requestBody.FilePath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
 	}
 	err = service.NewTextFile(requestBody.FilePath)
 	if err != nil {
@@ -40,6 +48,13 @@ var writeFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
+	if config.Instance.YouPlusPath {
+		requestBody.FilePath, err = service.GetRealPath(requestBody.FilePath, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
 	err = service.WriteTextFile(requestBody.FilePath, requestBody.Content)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
@@ -51,7 +66,15 @@ var writeFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 }
 
 var readAsTextFileHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var err error
 	path := context.GetQueryString("path")
+	if config.Instance.YouPlusPath {
+		path, err = service.GetRealPath(path, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+	}
 	text, err := service.ReadFileAsString(path)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
