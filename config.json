@@ -4,11 +4,16 @@
     "path": "./fstab"
   },
   "mountpoint": [
-    "/mnt/images"
+
   ],
   "youplus": {
     "url": "http://localhost:8999",
     "auth": false,
     "path": false
+  },
+  "archive": {
+    "engine": "Default",
+    "extract": "",
+    "compress": ""
   }
 }
