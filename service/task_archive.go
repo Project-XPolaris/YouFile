@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
+	"path/filepath"
 	"sync"
 )
 
@@ -20,7 +21,14 @@ type ExtractTask struct {
 	Input      []*ExtractInput    `json:"-"`
 	Option     *ExtractTaskOption `json:"-"`
 	OnComplete func(id string)    `json:"-"`
+	Output     *ExtractTaskOutput
 	sync.Mutex
+}
+type ExtractTaskOutput struct {
+	Complete int      `json:"complete"`
+	Total    int      `json:"total"`
+	Files    []string `json:"name"`
+	Path     []string `json:"path"`
 }
 
 func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOption) *ExtractTask {
@@ -32,6 +40,17 @@ func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOptio
 		Input:    input,
 		Option:   &option,
 	}
+	o := &ExtractTaskOutput{
+		Path:     []string{},
+		Files:    []string{},
+		Total:    len(input),
+		Complete: 0,
+	}
+	for _, extractInput := range input {
+		o.Path = append(o.Path, extractInput.Input)
+		o.Files = append(o.Files, filepath.Base(extractInput.Input))
+	}
+	task.Output = o
 	t.Lock()
 	t.Tasks = append(t.Tasks, task)
 	t.Unlock()
@@ -50,6 +69,7 @@ func (t *ExtractTask) Run() {
 		if err != nil {
 			logrus.Error(err)
 		}
+		t.Output.Complete += 1
 		if t.Option.OnFileExtractComplete != nil {
 			t.Option.OnFileExtractComplete(t.Id, input.Output)
 		}

@@ -42,7 +42,7 @@ func SerializeTaskOutput(data interface{}) interface{} {
 	case *service.ArchiveTask:
 		return map[string]interface{}{}
 	case *service.ExtractTask:
-		return map[string]interface{}{}
+		return v.Output
 	default:
 		return data
 	}
