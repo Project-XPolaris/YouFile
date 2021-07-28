@@ -1,0 +1,14 @@
+{
+  "addr": ":8300",
+  "fstab": {
+    "path": "./fstab"
+  },
+  "mountpoint": [
+
+  ],
+  "youplus": {
+    "url": "http://localhost:8999",
+    "auth": false,
+    "path": false
+  }
+}

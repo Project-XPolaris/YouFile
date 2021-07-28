@@ -1,0 +1,6 @@
+{
+    "installType":"service",
+    "name":"youfilecore",
+    "installScript":"./main service install",
+    "uninstallScript":"./main service uninstall"
+}

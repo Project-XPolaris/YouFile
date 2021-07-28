@@ -1,0 +1,7 @@
+{
+  "app_name": "YouFile Service",
+  "auto_start": false,
+  "type":"Service",
+  "service_name":"YouFileCoreService.service",
+  "icon":"icon.png"
+}
