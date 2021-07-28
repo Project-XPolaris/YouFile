@@ -16,6 +16,7 @@ const (
 	TaskTypeSearch    = "Search"
 	TaskTypeDelete    = "Delete"
 	TaskTypeUnarchive = "Unarchive"
+	TaskTypeArchive   = "Archive"
 	TaskStateRunning  = "Running"
 	TaskStateComplete = "Complete"
 	TaskStateError    = "Error"
@@ -135,7 +136,7 @@ func (q *TaskQueryBuilder) Query() []Task {
 						return true
 					}
 				case TaskTypeUnarchive:
-					if _, ok := i.(*UnarchiveTask); ok {
+					if _, ok := i.(*ExtractTask); ok {
 						return true
 					}
 				}
