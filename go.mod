@@ -12,7 +12,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.7 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	github.com/project-xpolaris/youplustoolkit v0.0.0-20210723014647-c1d1d0f523ad // indirect
+	github.com/project-xpolaris/youplustoolkit v0.0.0-20210804095601-e3eaf0159fb1 // indirect
 	github.com/rs/xid v1.2.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.4.1
@@ -21,8 +21,4 @@ require (
 	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744 // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.9
-)
-
-replace (
-	github.com/project-xpolaris/youplustoolkit  => /home/aren/Desktop/YouPlus-Project/youplustoolkit
 )

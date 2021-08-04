@@ -323,6 +323,8 @@ github.com/posener/complete v1.1.1 h1:ccV59UEOTzVDnDUEFdT95ZzHVZ+5+158q8+SJb2QV5
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/project-xpolaris/youplustoolkit v0.0.0-20210723014647-c1d1d0f523ad h1:n9oEfdslPtJOfeCBDSJRuSAQxg+p1ED6ccEf8ciO/GI=
 github.com/project-xpolaris/youplustoolkit v0.0.0-20210723014647-c1d1d0f523ad/go.mod h1:Y//bEVAFXg4D8wSay3Q9/8iwfbc+bRFKpX0ZCQ6S8WY=
+github.com/project-xpolaris/youplustoolkit v0.0.0-20210804095601-e3eaf0159fb1 h1:oDenIXeLsaTxQOj+o5zoMunSNX/9h3p6mLH+N+QJdeI=
+github.com/project-xpolaris/youplustoolkit v0.0.0-20210804095601-e3eaf0159fb1/go.mod h1:Y//bEVAFXg4D8wSay3Q9/8iwfbc+bRFKpX0ZCQ6S8WY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3 h1:9iH4JKXLzFbOAdtqv/a+j8aewx2Y8lAjAydhbaScPF8=
 github.com/prometheus/client_golang v0.9.3/go.mod h1:/TN21ttK/J9q6uSwhBd54HahCDft0ttaMvbicHlPoso=

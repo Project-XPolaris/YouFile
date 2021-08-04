@@ -1,7 +1,7 @@
 package template
 
 type DatasetSnapshot struct {
-	Name string
+	Name string `json:"name"`
 }
 type DatasetTemplate struct {
 	Snapshots []DatasetSnapshot `json:"snapshots"`
