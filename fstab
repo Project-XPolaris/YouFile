@@ -1,3 +1,1 @@
-//192.168.31.167/photo /mnt/images cifs dir_mode=0777,username=takayamaaren,password=dzh17217,iocharset=utf8,file_mode=0777 0 0
-//192.168.31.186/music /mnt/music2 cifs dir_mode=0777,username=aren1,password=dzh17217,iocharset=utf8,file_mode=0777 0 0
-//192.168.31.186/manga /mnt/manga cifs dir_mode=0777,username=aren1,password=dzh17217,iocharset=utf8,file_mode=0777 0 0
+

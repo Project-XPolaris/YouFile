@@ -19,8 +19,10 @@ type AppConfig struct {
 	FstabPath       string
 	MountPoints     []string
 	YouPlusPath     bool
-	YouPlusAuth bool
+	YouPlusAuth     bool
 	YouPlusUrl      string
+	YouPlusZFS      bool
+	YouPlusRPC      string
 	ArchiveEngine   string
 	ArchiveExtract  string
 	ArchiveCompress string
@@ -41,6 +43,8 @@ func LoadAppConfig() error {
 	Manager.SetDefault("mountpoint", []string{})
 	Manager.SetDefault("youplus.path", false)
 	Manager.SetDefault("youplus.url", "http://localhost:8999")
+	Manager.SetDefault("youplus.rpcurl", "")
+	Manager.SetDefault("youplus.zfs", false)
 	Manager.SetDefault("archive.engine", ArchiveEngineDefault)
 
 	Instance.Addr = Manager.GetString("addr")
@@ -48,6 +52,8 @@ func LoadAppConfig() error {
 	Instance.MountPoints = Manager.GetStringSlice("mountpoint")
 	Instance.YouPlusPath = Manager.GetBool("youplus.path")
 	Instance.YouPlusUrl = Manager.GetString("youplus.url")
+	Instance.YouPlusZFS = Manager.GetBool("youplus.zfs")
+	Instance.YouPlusRPC = Manager.GetString("youplus.rpcurl")
 	Instance.ArchiveEngine = Manager.GetString("archive.engine")
 	Instance.ArchiveExtract = Manager.GetString("archive.extract")
 	Instance.ArchiveCompress = Manager.GetString("archive.compress")

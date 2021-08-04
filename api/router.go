@@ -4,6 +4,11 @@ import "github.com/allentom/haruka"
 
 func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/path/read", readDirHandler)
+	e.Router.GET("/path/dataset", getFolderDataset)
+	e.Router.POST("/path/dataset", createFolderDataset)
+	e.Router.DELETE("/path/dataset", deleteFolderDataset)
+	e.Router.POST("/path/snapshot", createSnapshot)
+	e.Router.DELETE("/path/snapshot", deleteSnapshot)
 	e.Router.POST("/path/copy", copyFileHandler)
 	e.Router.AddHandler("/path/remove", deleteFileHandler)
 	e.Router.AddHandler("/path/rename", renameFileHandler)

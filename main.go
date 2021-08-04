@@ -55,6 +55,19 @@ func Program() {
 		}
 		youplusLog.Info("check youplus service [pass]")
 	}
+	if len(config.Instance.YouPlusRPC) > 0 {
+		youplusRPCLog := Logger.WithFields(logrus.Fields{
+			"scope": "YouPlusRPC",
+			"url":   config.Instance.YouPlusRPC,
+		})
+		youplusRPCLog.Info("check youplus rpc service [checking]")
+		err = youplus.InitRPCClient()
+		if err != nil {
+			youplusRPCLog.Fatal(err)
+		}
+		youplusRPCLog.Info("check youplus rpc service [pass]")
+
+	}
 	api.RunApiService()
 }
 

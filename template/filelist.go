@@ -1,11 +1,14 @@
 package template
 
 import (
+	"context"
+	"github.com/project-xpolaris/youplustoolkit/youplus/rpc"
 	"os"
 	"path/filepath"
 	"strings"
 	"youfile/config"
 	"youfile/service"
+	"youfile/youplus"
 )
 
 type FileItem struct {
@@ -14,13 +17,14 @@ type FileItem struct {
 	Path      string `json:"path"`
 	Size      int64  `json:"size"`
 	Thumbnail string `json:"thumbnail,omitempty"`
+	IsDataset bool   `json:"isDataset"`
 }
 type FileListTemplate struct {
 	Result []FileItem `json:"result"`
 	Sep    string     `json:"sep"`
 }
 
-func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTemplate {
+func NewFileListTemplate(result []os.FileInfo, parentPath string, realPath string) *FileListTemplate {
 	items := make([]FileItem, 0)
 	for _, info := range result {
 		item := FileItem{
@@ -30,6 +34,20 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string) *FileListTempl
 		}
 		if info.IsDir() {
 			item.Type = "Directory"
+			// check is zfs path
+			if config.Instance.YouPlusZFS {
+				realItemPath := filepath.Join(realPath, info.Name())
+				reply, _ := youplus.DefaultYouPlusRPCClient.Client.CheckDataset(
+					context.Background(),
+					&rpc.CheckDatasetRequest{
+						Path: &realItemPath,
+					},
+				)
+				if reply != nil {
+					item.IsDataset = *reply.IsDataset
+				}
+			}
+
 		} else {
 			item.Type = "File"
 			thumbnailName, _ := service.GetFileThumbnail(item.Path)

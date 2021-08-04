@@ -8,8 +8,10 @@
   ],
   "youplus": {
     "url": "http://localhost:8999",
+    "rpcurl": "localhost:50055",
     "auth": false,
-    "path": false
+    "path": false,
+    "zfs": false
   },
   "archive": {
     "engine": "Default",

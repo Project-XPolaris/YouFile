@@ -1,19 +1,25 @@
 package api
 
 import (
+	gocontext "context"
 	"errors"
 	"fmt"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/allentom/haruka"
 	"github.com/d-tux/go-fstab"
+	"github.com/project-xpolaris/youplustoolkit/youplus/rpc"
 	"net/http"
 	"path/filepath"
 	"youfile/config"
 	"youfile/service"
 	"youfile/template"
 	"youfile/util"
+	"youfile/youplus"
 )
 
+var (
+	FeatureNotEnableError = errors.New("feature not enable")
+)
 var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 	readPath := context.GetQueryString("readPath")
 	realPath, err := service.GetRealPath(readPath, context.Param["token"].(string))
@@ -36,14 +42,111 @@ var readDirHandler haruka.RequestHandler = func(context *haruka.Context) {
 			})
 		})
 	}
-	data := template.NewFileListTemplate(items, readPath)
+
+	data := template.NewFileListTemplate(items, readPath, realPath)
 	err = context.JSON(data)
 	if err != nil {
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
 }
-
+var getFolderDataset haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.GetDatasetInfo(
+		gocontext.Background(),
+		&rpc.GetDatasetInfoRequest{Dataset: &path},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	snapshots := make([]template.DatasetSnapshot, 0)
+	for _, snapshot := range reply.Snapshots {
+		snapshots = append(snapshots, template.DatasetSnapshot{Name: snapshot.GetName()})
+	}
+	context.JSON(haruka.JSON{
+		"success":   true,
+		"snapshots": snapshots,
+	})
+}
+var createFolderDataset haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.CreateDataset(
+		gocontext.Background(),
+		&rpc.CreateDatasetRequest{Path: &path},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	context.JSON(haruka.JSON{
+		"success": reply.Success,
+	})
+}
+var deleteFolderDataset haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.DeleteDataset(
+		gocontext.Background(),
+		&rpc.DeleteDatasetRequest{Path: &path},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	context.JSON(haruka.JSON{
+		"success": reply.Success,
+	})
+}
+var createSnapshot haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	name := context.GetQueryString("name")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.CreateSnapshot(
+		gocontext.Background(),
+		&rpc.CreateSnapshotRequest{Dataset: &path, Snapshot: &name},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	context.JSON(haruka.JSON{
+		"success": reply.Success,
+	})
+}
+var deleteSnapshot haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	name := context.GetQueryString("name")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.DeleteSnapshot(
+		gocontext.Background(),
+		&rpc.DeleteSnapshotRequest{Dataset: &path, Snapshot: &name},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	context.JSON(haruka.JSON{
+		"success": reply.Success,
+	})
+}
 var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	var err error
 	src := context.GetQueryString("src")
