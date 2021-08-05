@@ -325,6 +325,8 @@ github.com/project-xpolaris/youplustoolkit v0.0.0-20210723014647-c1d1d0f523ad h1
 github.com/project-xpolaris/youplustoolkit v0.0.0-20210723014647-c1d1d0f523ad/go.mod h1:Y//bEVAFXg4D8wSay3Q9/8iwfbc+bRFKpX0ZCQ6S8WY=
 github.com/project-xpolaris/youplustoolkit v0.0.0-20210804095601-e3eaf0159fb1 h1:oDenIXeLsaTxQOj+o5zoMunSNX/9h3p6mLH+N+QJdeI=
 github.com/project-xpolaris/youplustoolkit v0.0.0-20210804095601-e3eaf0159fb1/go.mod h1:Y//bEVAFXg4D8wSay3Q9/8iwfbc+bRFKpX0ZCQ6S8WY=
+github.com/project-xpolaris/youplustoolkit v0.0.0-20210805094841-5355bc27ee03 h1:qQmjfCr1bjvqMEINc7zgBxXZOUdmhtqi67C2LzgybQI=
+github.com/project-xpolaris/youplustoolkit v0.0.0-20210805094841-5355bc27ee03/go.mod h1:Y//bEVAFXg4D8wSay3Q9/8iwfbc+bRFKpX0ZCQ6S8WY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3 h1:9iH4JKXLzFbOAdtqv/a+j8aewx2Y8lAjAydhbaScPF8=
 github.com/prometheus/client_golang v0.9.3/go.mod h1:/TN21ttK/J9q6uSwhBd54HahCDft0ttaMvbicHlPoso=

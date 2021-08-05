@@ -9,6 +9,7 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.DELETE("/path/dataset", deleteFolderDataset)
 	e.Router.POST("/path/snapshot", createSnapshot)
 	e.Router.DELETE("/path/snapshot", deleteSnapshot)
+	e.Router.POST("/path/dataset/rollback", rollbackDataset)
 	e.Router.POST("/path/copy", copyFileHandler)
 	e.Router.AddHandler("/path/remove", deleteFileHandler)
 	e.Router.AddHandler("/path/rename", renameFileHandler)

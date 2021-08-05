@@ -147,6 +147,25 @@ var deleteSnapshot haruka.RequestHandler = func(context *haruka.Context) {
 		"success": reply.Success,
 	})
 }
+var rollbackDataset haruka.RequestHandler = func(context *haruka.Context) {
+	if !config.Instance.YouPlusZFS {
+		AbortErrorWithStatus(FeatureNotEnableError, context, http.StatusForbidden)
+		return
+	}
+	path := context.GetQueryString("path")
+	name := context.GetQueryString("name")
+	reply, err := youplus.DefaultYouPlusRPCClient.Client.RollbackDataset(
+		gocontext.Background(),
+		&rpc.RollbackDatasetRequest{Dataset: &path, Snapshot: &name},
+	)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusInternalServerError)
+		return
+	}
+	context.JSON(haruka.JSON{
+		"success": reply.Success,
+	})
+}
 var copyFileHandler haruka.RequestHandler = func(context *haruka.Context) {
 	var err error
 	src := context.GetQueryString("src")
