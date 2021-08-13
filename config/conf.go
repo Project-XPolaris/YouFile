@@ -14,6 +14,11 @@ const (
 	ArchiveEngineWinRAR  = "WinRAR"
 )
 
+type EntityConfig struct {
+	Enable  bool
+	Name    string
+	Version int64
+}
 type AppConfig struct {
 	Addr            string
 	FstabPath       string
@@ -26,6 +31,7 @@ type AppConfig struct {
 	ArchiveEngine   string
 	ArchiveExtract  string
 	ArchiveCompress string
+	Entity          EntityConfig
 }
 
 func LoadAppConfig() error {
@@ -57,6 +63,11 @@ func LoadAppConfig() error {
 	Instance.ArchiveEngine = Manager.GetString("archive.engine")
 	Instance.ArchiveExtract = Manager.GetString("archive.extract")
 	Instance.ArchiveCompress = Manager.GetString("archive.compress")
+	Instance.Entity = EntityConfig{
+		Enable:  Manager.GetBool("youplus.entity.enable"),
+		Name:    Manager.GetString("youplus.entity.name"),
+		Version: Manager.GetInt64("youplus.entity.version"),
+	}
 	return nil
 }
 

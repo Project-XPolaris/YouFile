@@ -11,7 +11,12 @@
     "rpcurl": "localhost:50055",
     "auth": false,
     "path": false,
-    "zfs": false
+    "zfs": false,
+    "entity":{
+      "enable": true,
+      "name": "youfilecore",
+      "version": 1
+    }
   },
   "archive": {
     "engine": "Default",
