@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	srv "github.com/kardianos/service"
+	entry "github.com/project-xpolaris/youplustoolkit/youplus/entity"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -11,6 +14,7 @@ import (
 	"youfile/config"
 	"youfile/database"
 	"youfile/service"
+	"youfile/util"
 	"youfile/youplus"
 )
 
@@ -66,6 +70,40 @@ func Program() {
 			youplusRPCLog.Fatal(err)
 		}
 		youplusRPCLog.Info("check youplus rpc service [pass]")
+
+	}
+	// youplus entity
+	if config.Instance.Entity.Enable {
+		entityLog := Logger.WithFields(logrus.Fields{
+			"scope": "YouplusEntity",
+			"url":   config.Instance.YouPlusRPC,
+		})
+		entityLog.Info("register entity")
+		youplus.InitEntity()
+
+		err := youplus.DefaultEntry.Register()
+		if err != nil {
+			entityLog.Fatal(err.Error())
+		}
+
+		addrs, err := util.GetHostIpList()
+		urls := make([]string, 0)
+		for _, addr := range addrs {
+			urls = append(urls, fmt.Sprintf("http://%s%s", addr, config.Instance.Addr))
+		}
+		if err != nil {
+			entityLog.Fatal(err.Error())
+		}
+		err = youplus.DefaultEntry.UpdateExport(entry.EntityExport{Urls: urls, Extra: map[string]interface{}{}})
+		if err != nil {
+			entityLog.Fatal(err.Error())
+		}
+
+		err = youplus.DefaultEntry.StartHeartbeat(context.Background())
+		if err != nil {
+			entityLog.Fatal(err.Error())
+		}
+		entityLog.Info("success register entity")
 
 	}
 	api.RunApiService()
