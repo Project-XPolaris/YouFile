@@ -59,6 +59,7 @@ func LoadAppConfig() error {
 	Instance.YouPlusPath = Manager.GetBool("youplus.path")
 	Instance.YouPlusUrl = Manager.GetString("youplus.url")
 	Instance.YouPlusZFS = Manager.GetBool("youplus.zfs")
+	Instance.YouPlusAuth = Manager.GetBool("youplus.auth")
 	Instance.YouPlusRPC = Manager.GetString("youplus.rpcurl")
 	Instance.ArchiveEngine = Manager.GetString("archive.engine")
 	Instance.ArchiveExtract = Manager.GetString("archive.extract")
