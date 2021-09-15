@@ -31,6 +31,7 @@ type AppConfig struct {
 	ArchiveEngine   string
 	ArchiveExtract  string
 	ArchiveCompress string
+	Thumbnails      bool
 	Entity          EntityConfig
 }
 
@@ -52,6 +53,7 @@ func LoadAppConfig() error {
 	Manager.SetDefault("youplus.rpcurl", "")
 	Manager.SetDefault("youplus.zfs", false)
 	Manager.SetDefault("archive.engine", ArchiveEngineDefault)
+	Manager.SetDefault("thumbnails", false)
 
 	Instance.Addr = Manager.GetString("addr")
 	Instance.FstabPath = Manager.GetString("fstab.path")
@@ -64,6 +66,7 @@ func LoadAppConfig() error {
 	Instance.ArchiveEngine = Manager.GetString("archive.engine")
 	Instance.ArchiveExtract = Manager.GetString("archive.extract")
 	Instance.ArchiveCompress = Manager.GetString("archive.compress")
+	Instance.Thumbnails = Manager.GetBool("thumbnails")
 	Instance.Entity = EntityConfig{
 		Enable:  Manager.GetBool("youplus.entity.enable"),
 		Name:    Manager.GetString("youplus.entity.name"),
