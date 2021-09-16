@@ -11,7 +11,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.7 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	github.com/project-xpolaris/youplustoolkit v0.0.0-20210819072854-fca2c927b193
+	github.com/project-xpolaris/youplustoolkit v0.0.0-20210910100103-f7acffa78788
 	github.com/rs/xid v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.4.1
