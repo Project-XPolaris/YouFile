@@ -14,3 +14,8 @@ func InitRPCClient() error {
 	timeoutCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	return DefaultYouPlusRPCClient.Connect(timeoutCtx)
 }
+
+func GenerateRPCTimeoutContext() context.Context {
+	timeout, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return timeout
+}
