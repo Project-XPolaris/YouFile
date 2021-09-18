@@ -12,16 +12,18 @@ type TaskTemplate struct {
 	Error     error       `json:"error,omitempty"`
 	StartTime string      `json:"start_time,omitempty"`
 	StopTime  string      `json:"stop_time,omitempty"`
+	Username  string      `json:"username"`
 }
 
 func NewTaskTemplate(task service.Task) *TaskTemplate {
 	formatString := "2006-01-02 15:04:05"
 	template := &TaskTemplate{
-		Id:     task.GetId(),
-		Type:   task.GetType(),
-		Status: task.GetStatus(),
-		Output: SerializeTaskOutput(task),
-		Error:  task.GetError(),
+		Id:       task.GetId(),
+		Type:     task.GetType(),
+		Status:   task.GetStatus(),
+		Output:   SerializeTaskOutput(task),
+		Error:    task.GetError(),
+		Username: task.GetUsername(),
 	}
 	if task.GetStartTime() != nil {
 		template.StartTime = task.GetStartTime().Format(formatString)

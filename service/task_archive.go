@@ -31,8 +31,8 @@ type ExtractTaskOutput struct {
 	Path     []string `json:"path"`
 }
 
-func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOption) *ExtractTask {
-	taskInfo := t.createTask()
+func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOption, username string) *ExtractTask {
+	taskInfo := t.createTask(username)
 	taskInfo.Type = TaskTypeUnarchive
 	taskInfo.Status = TaskStateRunning
 	task := &ExtractTask{
@@ -91,8 +91,8 @@ type ArchiveTask struct {
 	sync.Mutex
 }
 
-func (t *TaskPool) NewArchiveTask(source []string, target string, OnComplete func(id string, target string)) *ArchiveTask {
-	taskInfo := t.createTask()
+func (t *TaskPool) NewArchiveTask(source []string, target string, OnComplete func(id string, target string), username string) *ArchiveTask {
+	taskInfo := t.createTask(username)
 	taskInfo.Type = TaskTypeArchive
 	taskInfo.Status = TaskStateRunning
 	task := &ArchiveTask{

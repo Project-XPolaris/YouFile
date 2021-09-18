@@ -18,6 +18,14 @@ func (m *AuthMiddleware) OnRequest(ctx *haruka.Context) {
 	ctx.Param["token"] = rawString
 	if config.Instance.YouPlusAuth {
 		tokenStr := strings.ReplaceAll(rawString, "Bearer ", "")
+		if len(tokenStr) == 0 {
+			tokenStr = ctx.GetQueryString("token")
+		}
+		if len(tokenStr) == 0 {
+			AbortErrorWithStatus(errors.New("token is empty"), ctx, 403)
+			ctx.Interrupt()
+			return
+		}
 		reply, err := youplus.DefaultYouPlusRPCClient.Client.CheckToken(youplus.GenerateRPCTimeoutContext(), &rpc.CheckTokenRequest{Token: &tokenStr})
 		if err != nil {
 			AbortErrorWithStatus(err, ctx, 403)
@@ -33,5 +41,8 @@ func (m *AuthMiddleware) OnRequest(ctx *haruka.Context) {
 		}
 		ctx.Param["username"] = reply.GetUsername()
 		ctx.Param["uid"] = reply.GetUid()
+	} else {
+		ctx.Param["username"] = ""
+		ctx.Param["uid"] = ""
 	}
 }

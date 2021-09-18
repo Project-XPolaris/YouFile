@@ -53,7 +53,6 @@ var newExtractTaskHandler haruka.RequestHandler = func(context *haruka.Context) 
 			Password: raw.Password,
 		})
 	}
-
 	task := service.DefaultTask.NewExtractTask(input, service.ExtractTaskOption{
 		OnComplete: func(id string) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
@@ -69,7 +68,7 @@ var newExtractTaskHandler haruka.RequestHandler = func(context *haruka.Context) 
 				"dir":   filepath.Dir(realPathMapping[output]),
 			})
 		},
-	})
+	}, context.Param["username"].(string))
 	go task.Run()
 	context.JSON(task)
 }
@@ -107,7 +106,7 @@ var newArchiveTaskHandler haruka.RequestHandler = func(context *haruka.Context) 
 			"id":     id,
 			"target": rawTarget,
 		})
-	})
+	}, context.Param["username"].(string))
 	go task.Run()
 	context.JSON(task)
 }

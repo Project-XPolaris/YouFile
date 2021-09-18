@@ -17,7 +17,7 @@ type CopyFileNotifier struct {
 	StopFlag          bool
 }
 
-func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
+func CopyFile(source, dest string, notifier *CopyFileNotifier, onDuplicate string) error {
 	if notifier != nil {
 		if notifier.StopFlag {
 			return nil
@@ -37,9 +37,23 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 	if err != nil {
 		return err
 	}
+	targetDest := dest
+	if onDuplicate != "overwrite" {
+		for {
+			targetStat, _ := AppFs.Stat(targetDest)
+			if targetStat != nil {
+				if onDuplicate == "skip" {
+					return nil
+				}
+			} else {
+				break
+			}
+			targetDest = util.RenameDuplicateFilename(targetDest)
+		}
+	}
 
 	// Create the destination file.
-	dst, err := AppFs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0775)
+	dst, err := AppFs.OpenFile(targetDest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0775)
 	if err != nil {
 		return err
 	}
@@ -78,7 +92,7 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 	// open the file.
 	info, err := AppFs.Stat(source)
 	if err != nil {
-		err = AppFs.Chmod(dest, info.Mode())
+		err = AppFs.Chmod(targetDest, info.Mode())
 		if err != nil {
 			return err
 		}
@@ -90,7 +104,7 @@ func CopyFile(source, dest string, notifier *CopyFileNotifier) error {
 	return nil
 }
 
-func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
+func CopyDir(source, dest string, notifier *CopyFileNotifier, onDuplicate string) error {
 	if notifier != nil && notifier.StopFlag {
 		return nil
 	}
@@ -120,7 +134,7 @@ func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
 
 		if obj.IsDir() {
 			// Create sub-directories, recursively.
-			err = CopyDir(fsource, fdest, notifier)
+			err = CopyDir(fsource, fdest, notifier, onDuplicate)
 			if err != nil {
 				if err == util.CopyInterrupt {
 					return err
@@ -129,7 +143,7 @@ func CopyDir(source, dest string, notifier *CopyFileNotifier) error {
 			}
 		} else {
 			// Perform the file copy.
-			err = CopyFile(fsource, fdest, notifier)
+			err = CopyFile(fsource, fdest, notifier, onDuplicate)
 			if err != nil {
 				if err == util.CopyInterrupt {
 					return err

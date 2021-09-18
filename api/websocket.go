@@ -27,8 +27,10 @@ var (
 
 type NotificationConnection struct {
 	Id         string
+	Username   string
 	Connection *websocket.Conn
 	Logger     *logrus.Entry
+	isClose    bool
 }
 
 type NotificationManager struct {
@@ -36,17 +38,24 @@ type NotificationManager struct {
 	sync.Mutex
 }
 
-func (m *NotificationManager) addConnection(conn *websocket.Conn) *NotificationConnection {
+func (m *NotificationManager) addConnection(conn *websocket.Conn, username string) *NotificationConnection {
 	m.Lock()
 	defer m.Unlock()
 	id := xid.New().String()
-	m.Conns[id] = &NotificationConnection{
+	notification := &NotificationConnection{
 		Connection: conn,
 		Logger: WebsocketLogger.WithFields(logrus.Fields{
-			"id": id,
+			"id":       id,
+			"username": username,
 		}),
-		Id: id,
+		Username: username,
+		Id:       id,
 	}
+	conn.SetCloseHandler(func(code int, text string) error {
+		notification.isClose = true
+		return nil
+	})
+	m.Conns[id] = notification
 	return m.Conns[id]
 }
 func (m *NotificationManager) removeConnection(id string) {
@@ -58,9 +67,24 @@ func (m *NotificationManager) sendJSONToAll(data interface{}) {
 	m.Lock()
 	defer m.Unlock()
 	for _, notificationConnection := range m.Conns {
+		if notificationConnection.isClose {
+			continue
+		}
 		err := notificationConnection.Connection.WriteJSON(data)
 		if err != nil {
 			notificationConnection.Logger.Error(err)
+		}
+	}
+}
+func (m *NotificationManager) sendJSONToUser(data interface{}, username string) {
+	m.Lock()
+	defer m.Unlock()
+	for _, notificationConnection := range m.Conns {
+		if notificationConnection.Username == username && !notificationConnection.isClose {
+			err := notificationConnection.Connection.WriteJSON(data)
+			if err != nil {
+				notificationConnection.Logger.Error(err)
+			}
 		}
 	}
 }
@@ -77,12 +101,10 @@ var notificationSocketHandler haruka.RequestHandler = func(context *haruka.Conte
 		WebsocketLogger.Error(err)
 		return
 	}
-	notifier := DefaultNotificationManager.addConnection(c)
-	notifier.Logger.Info("notification added")
+	notifier := DefaultNotificationManager.addConnection(c, context.Param["username"].(string))
 	defer func() {
 		DefaultNotificationManager.removeConnection(notifier.Id)
 		c.Close()
-		notifier.Logger.Info("notification disconnected")
 	}()
 	for {
 		_, _, err := c.ReadMessage()

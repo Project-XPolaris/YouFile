@@ -27,18 +27,18 @@ func ReadDir(readPath string) ([]os.FileInfo, error) {
 	items, err := file.Readdir(0)
 	return items, nil
 }
-func Copy(src string, dest string, notifier *CopyFileNotifier) error {
+func Copy(src string, dest string, notifier *CopyFileNotifier, onDuplicate string) error {
 	srcStat, err := AppFs.Stat(src)
 	if err != nil {
 		return err
 	}
 	if srcStat.IsDir() {
-		err = CopyDir(src, dest, notifier)
+		err = CopyDir(src, dest, notifier, onDuplicate)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = CopyFile(src, dest, notifier)
+		err = CopyFile(src, dest, notifier, onDuplicate)
 		if err != nil {
 			return err
 		}
