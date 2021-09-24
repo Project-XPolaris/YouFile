@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	srv "github.com/kardianos/service"
+	youlogtoolkit "github.com/project-xpolaris/youplustoolkit/youlog"
 	entry "github.com/project-xpolaris/youplustoolkit/youplus/entity"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -15,6 +16,7 @@ import (
 	"youfile/database"
 	"youfile/service"
 	"youfile/util"
+	"youfile/youlog"
 	"youfile/youplus"
 )
 
@@ -34,47 +36,55 @@ func initService() error {
 	}
 	return nil
 }
-func Program() {
-	err := config.LoadAppConfig()
+func Program(configPath string) {
+	err := config.LoadAppConfig(configPath)
 	if err != nil {
 		Logger.Fatal(err)
 	}
-	err = service.LoadFstab()
+	err = youlog.InitLogService()
 	if err != nil {
 		Logger.Fatal(err)
+	}
+	bootLogger := youlog.DefaultLogger.WithFields(youlogtoolkit.Fields{
+		"scope": "boot",
+	})
+	bootLogger.Info("load fstab")
+	err = service.LoadFstab()
+	if err != nil {
+		bootLogger.Fatal(err.Error())
 	}
 	err = database.ConnectToDatabase()
 	if err != nil {
 		Logger.Fatal(err)
 	}
 	if config.Instance.YouPlusPath {
-		youplusLog := Logger.WithFields(logrus.Fields{
+		youplusLog := bootLogger.WithFields(youlogtoolkit.Fields{
 			"scope": "YouPlus",
 			"url":   config.Instance.YouPlusUrl,
 		})
 		youplusLog.Info("check youplus service [checking]")
 		err = youplus.InitClient()
 		if err != nil {
-			youplusLog.Fatal(err)
+			youplusLog.Fatal(err.Error())
 		}
 		youplusLog.Info("check youplus service [pass]")
 	}
 	if len(config.Instance.YouPlusRPC) > 0 {
-		youplusRPCLog := Logger.WithFields(logrus.Fields{
+		youplusRPCLog := bootLogger.WithFields(youlogtoolkit.Fields{
 			"scope": "YouPlusRPC",
 			"url":   config.Instance.YouPlusRPC,
 		})
 		youplusRPCLog.Info("check youplus rpc service [checking]")
 		err = youplus.InitRPCClient()
 		if err != nil {
-			youplusRPCLog.Fatal(err)
+			youplusRPCLog.Fatal(err.Error())
 		}
 		youplusRPCLog.Info("check youplus rpc service [pass]")
 
 	}
 	// youplus entity
 	if config.Instance.Entity.Enable {
-		entityLog := Logger.WithFields(logrus.Fields{
+		entityLog := bootLogger.WithFields(youlogtoolkit.Fields{
 			"scope": "YouplusEntity",
 			"url":   config.Instance.YouPlusRPC,
 		})
@@ -106,13 +116,14 @@ func Program() {
 		entityLog.Info("success register entity")
 
 	}
+	bootLogger.Info("service start success")
 	api.RunApiService()
 }
 
 type program struct{}
 
 func (p *program) Start(s srv.Service) error {
-	go Program()
+	go Program("")
 	return nil
 }
 
@@ -236,8 +247,14 @@ func RunApp() {
 			{
 				Name:  "run",
 				Usage: "run app",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "conf",
+						Usage: "path to config file",
+					},
+				},
 				Action: func(context *cli.Context) error {
-					Program()
+					Program(context.String("conf"))
 					return nil
 				},
 			},

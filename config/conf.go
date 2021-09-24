@@ -3,6 +3,8 @@ package config
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"path/filepath"
+	"strings"
 )
 
 var Instance AppConfig
@@ -19,6 +21,13 @@ type EntityConfig struct {
 	Name    string
 	Version int64
 }
+type YouLogConfig struct {
+	Remote      bool
+	Addr        string
+	Retry       int
+	Application string
+	Instance    string
+}
 type AppConfig struct {
 	Addr            string
 	FstabPath       string
@@ -33,12 +42,34 @@ type AppConfig struct {
 	ArchiveCompress string
 	Thumbnails      bool
 	Entity          EntityConfig
+	YouLog          YouLogConfig
+	Remote          RemoteConfig
+}
+type RemoteServerConfig struct {
+	Enable bool
+	Addr   string
+}
+type RemoteClientConfig struct {
+	Enable bool
+	Addrs  []string
+}
+type RemoteConfig struct {
+	Server RemoteServerConfig
+	Client RemoteClientConfig
 }
 
-func LoadAppConfig() error {
-	Manager.AddConfigPath("./")
-	Manager.AddConfigPath("../")
-	Manager.SetConfigName("config")
+func LoadAppConfig(configPath string) error {
+	if len(configPath) != 0 {
+		Manager.AddConfigPath(filepath.Dir(configPath))
+		configFile := filepath.Base(configPath)
+		configFile = strings.ReplaceAll(configFile, filepath.Ext(configFile), "")
+		Manager.SetConfigName(configFile)
+
+	} else {
+		Manager.AddConfigPath("./")
+		Manager.SetConfigName("config")
+	}
+
 	Manager.SetConfigType("json")
 
 	err := Manager.ReadInConfig()
@@ -54,7 +85,15 @@ func LoadAppConfig() error {
 	Manager.SetDefault("youplus.zfs", false)
 	Manager.SetDefault("archive.engine", ArchiveEngineDefault)
 	Manager.SetDefault("thumbnails", false)
+	Manager.SetDefault("youlog.addr", "localhost:50052")
+	Manager.SetDefault("youlog.remote", false)
+	Manager.SetDefault("youlog.retry", 3000)
+	Manager.SetDefault("youlog.app", "YouFileCoreService")
 
+	Manager.SetDefault("remote.server.enable", false)
+	Manager.SetDefault("remote.server.addr", "localhost:50060")
+	Manager.SetDefault("remote.client.enable", false)
+	Manager.SetDefault("remote.client.addrs", []string{})
 	Instance.Addr = Manager.GetString("addr")
 	Instance.FstabPath = Manager.GetString("fstab.path")
 	Instance.MountPoints = Manager.GetStringSlice("mountpoint")
@@ -71,6 +110,23 @@ func LoadAppConfig() error {
 		Enable:  Manager.GetBool("youplus.entity.enable"),
 		Name:    Manager.GetString("youplus.entity.name"),
 		Version: Manager.GetInt64("youplus.entity.version"),
+	}
+	Instance.YouLog = YouLogConfig{
+		Remote:      Manager.GetBool("youlog.remote"),
+		Addr:        Manager.GetString("youlog.addr"),
+		Retry:       Manager.GetInt("youlog.retry"),
+		Application: Manager.GetString("youlog.app"),
+		Instance:    Manager.GetString("youlog.instance"),
+	}
+	Instance.Remote = RemoteConfig{
+		Server: RemoteServerConfig{
+			Enable: Manager.GetBool("remote.server.enable"),
+			Addr:   Manager.GetString("remote.server.addr"),
+		},
+		Client: RemoteClientConfig{
+			Enable: Manager.GetBool("remote.client.enable"),
+			Addrs:  Manager.GetStringSlice("remote.client.addrs"),
+		},
 	}
 	return nil
 }
