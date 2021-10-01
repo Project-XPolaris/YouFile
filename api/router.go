@@ -39,6 +39,6 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/thumbnails", getFileThumbnailHandler)
 	e.Router.POST("/thumbnails/clear", clearThumbnailHandler)
 	e.Router.POST("/user/auth", youPlusLoginHandler)
-	e.Router.GET("/user/auth", youPlusLoginHandler)
+	e.Router.GET("/user/auth", youPlusTokenHandler)
 	e.Router.AddHandler("/notification", notificationSocketHandler)
 }

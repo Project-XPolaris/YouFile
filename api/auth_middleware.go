@@ -10,13 +10,25 @@ import (
 	"youfile/youplus"
 )
 
+var noAuthUrls = []string{
+	"/user/auth",
+	"/service/info",
+}
+
 type AuthMiddleware struct {
 }
 
 func (m *AuthMiddleware) OnRequest(ctx *haruka.Context) {
 	rawString := ctx.Request.Header.Get("Authorization")
 	ctx.Param["token"] = rawString
-	if config.Instance.YouPlusAuth {
+	needAuth := true
+	for _, noAuthUrl := range noAuthUrls {
+		if ctx.Request.URL.Path == noAuthUrl {
+			needAuth = false
+			break
+		}
+	}
+	if config.Instance.YouPlusAuth && needAuth {
 		tokenStr := strings.ReplaceAll(rawString, "Bearer ", "")
 		if len(tokenStr) == 0 {
 			tokenStr = ctx.GetQueryString("token")

@@ -116,7 +116,7 @@ func Program(configPath string) {
 		entityLog.Info("success register entity")
 
 	}
-	bootLogger.Info("service start success")
+
 	api.RunApiService()
 }
 
