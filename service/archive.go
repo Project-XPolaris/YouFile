@@ -11,6 +11,8 @@ type CompressOption interface {
 type ArchiveEngine interface {
 	Compress(target []string, output string, option CompressOption) error
 	Extract(target string, output string, option ExtractOption) error
+	CanCompress() bool
+	CanExtract() bool
 }
 
 type BaseExtractOption struct {
@@ -40,13 +42,31 @@ func ExtractArchive(option ExtractFileOption) error {
 	var extractOption ExtractOption
 	if config.Instance.ArchiveEngine == config.ArchiveEngineWinRAR {
 		engine = NewWinRAREngine(config.Instance.ArchiveCompress, config.Instance.ArchiveExtract)
-		rarExtractOption := &WinRARExtractOption{}
-		if len(option.Password) > 0 {
-			rarExtractOption.Password = option.Password
+		if !engine.CanExtract() {
+			engine = nil
+		} else {
+			rarExtractOption := &WinRARExtractOption{}
+			if len(option.Password) > 0 {
+				rarExtractOption.Password = option.Password
+			}
+			extractOption = rarExtractOption
 		}
-		extractOption = rarExtractOption
 	}
-	if config.Instance.ArchiveEngine == config.ArchiveEngineDefault {
+
+	if config.Instance.ArchiveEngine == config.ArchiveEngineUnar {
+		engine = NewUnarArchiveEngine()
+		if !engine.CanExtract() {
+			engine = nil
+		} else {
+			unarExtractOption := &UnarArchiveExtractOption{}
+			if len(option.Password) > 0 {
+				unarExtractOption.Password = option.Password
+			}
+			extractOption = unarExtractOption
+		}
+	}
+
+	if engine == nil {
 		engine = &DefaultArchiveEngine{}
 		extractOption = &DefaultArchiveExtractOption{
 			BaseExtractOption{},

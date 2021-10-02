@@ -4,6 +4,15 @@ import "github.com/mholt/archiver/v3"
 
 type DefaultArchiveEngine struct {
 }
+
+func (e *DefaultArchiveEngine) CanCompress() bool {
+	return true
+}
+
+func (e *DefaultArchiveEngine) CanExtract() bool {
+	return true
+}
+
 type DefaultArchiveExtractOption struct {
 	BaseExtractOption
 }

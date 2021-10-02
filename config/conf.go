@@ -14,6 +14,7 @@ var Logger = logrus.WithField("scope", "config")
 const (
 	ArchiveEngineDefault = "Default"
 	ArchiveEngineWinRAR  = "WinRAR"
+	ArchiveEngineUnar    = "Unar"
 )
 
 type EntityConfig struct {
