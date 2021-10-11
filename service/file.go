@@ -45,6 +45,24 @@ func Copy(src string, dest string, notifier *CopyFileNotifier, onDuplicate strin
 	}
 	return nil
 }
+func Move(src string, dest string, notifier *MoveFileNotifier, onDuplicate string) error {
+	srcStat, err := AppFs.Stat(src)
+	if err != nil {
+		return err
+	}
+	if srcStat.IsDir() {
+		err = MoveDir(src, dest, notifier, onDuplicate)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = MoveFile(src, dest, notifier, onDuplicate)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func Rename(oldName string, newName string) error {
 	return AppFs.Rename(oldName, newName)
 }

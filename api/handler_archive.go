@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"youfile/config"
 	"youfile/service"
 )
 
@@ -33,18 +32,18 @@ var newExtractTaskHandler haruka.RequestHandler = func(context *haruka.Context) 
 			dirName := strings.ReplaceAll(filepath.Base(raw.Input), ext, "")
 			raw.Output = filepath.Join(filepath.Dir(raw.Input), dirName)
 		}
+		rawInput := raw.Input
+		raw.Input, err = service.GetRealPath(raw.Input, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		realPathMapping[raw.Input] = rawInput
 		rawOutput := raw.Output
-		if config.Instance.YouPlusPath {
-			raw.Input, err = service.GetRealPath(raw.Input, context.Param["token"].(string))
-			if err != nil {
-				AbortErrorWithStatus(err, context, http.StatusBadRequest)
-				return
-			}
-			raw.Output, err = service.GetRealPath(raw.Input, context.Param["token"].(string))
-			if err != nil {
-				AbortErrorWithStatus(err, context, http.StatusBadRequest)
-				return
-			}
+		raw.Output, err = service.GetRealPath(raw.Output, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
 		}
 		realPathMapping[raw.Output] = rawOutput
 		input = append(input, &service.ExtractInput{
@@ -68,6 +67,7 @@ var newExtractTaskHandler haruka.RequestHandler = func(context *haruka.Context) 
 				"dir":   filepath.Dir(realPathMapping[output]),
 			})
 		},
+		DisplayPath: realPathMapping,
 	}, context.Param["username"].(string))
 	go task.Run()
 	context.JSON(task)

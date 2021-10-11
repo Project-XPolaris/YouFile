@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
 	"sync"
 )
 
@@ -15,6 +14,7 @@ type ExtractInput struct {
 type ExtractTaskOption struct {
 	OnComplete            func(id string)
 	OnFileExtractComplete func(id string, output string)
+	DisplayPath           map[string]string
 }
 type ExtractTask struct {
 	TaskInfo
@@ -25,10 +25,8 @@ type ExtractTask struct {
 	sync.Mutex
 }
 type ExtractTaskOutput struct {
-	Complete int      `json:"complete"`
-	Total    int      `json:"total"`
-	Files    []string `json:"name"`
-	Path     []string `json:"path"`
+	Complete int `json:"complete"`
+	Total    int `json:"total"`
 }
 
 func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOption, username string) *ExtractTask {
@@ -41,14 +39,8 @@ func (t *TaskPool) NewExtractTask(input []*ExtractInput, option ExtractTaskOptio
 		Option:   &option,
 	}
 	o := &ExtractTaskOutput{
-		Path:     []string{},
-		Files:    []string{},
 		Total:    len(input),
 		Complete: 0,
-	}
-	for _, extractInput := range input {
-		o.Path = append(o.Path, extractInput.Input)
-		o.Files = append(o.Files, filepath.Base(extractInput.Input))
 	}
 	task.Output = o
 	t.Lock()

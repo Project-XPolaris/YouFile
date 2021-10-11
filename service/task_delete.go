@@ -22,12 +22,24 @@ type DeleteFileTask struct {
 }
 
 type NewDeleteFileTaskOption struct {
-	Src            []string
-	OnDone         func(id string)
-	OnItemComplete func(id string, src string)
-	Username       string
+	Src               []string
+	DisplaySrcMapping map[string]string
+	OnDone            func(task *DeleteFileTask)
+	OnError           func(task *DeleteFileTask)
+	OnItemComplete    func(id string, src string)
+	Username          string
 }
 
+func (t *DeleteFileTask) AbortError(err error) {
+	t.Lock()
+	t.Error = err
+	t.Status = TaskStateError
+	t.UpdateStopTime()
+	t.Unlock()
+	if t.Option.OnError != nil {
+		t.Option.OnError(t)
+	}
+}
 func (t *TaskPool) NewDeleteFileTask(option *NewDeleteFileTaskOption) Task {
 	taskInfo := t.createTask(option.Username)
 	taskInfo.Type = TaskTypeDelete
@@ -50,10 +62,7 @@ func (t *DeleteFileTask) Run() {
 	for _, deleteSrc := range t.Option.Src {
 		copyInfo, err := analyzeSource(deleteSrc)
 		if err != nil {
-			t.Lock()
-			t.Error = err
-			t.Status = TaskStateError
-			t.Unlock()
+			t.AbortError(err)
 			return
 		}
 		infos = append(infos, copyInfo)
@@ -114,10 +123,7 @@ func (t *DeleteFileTask) Run() {
 			if err == DeleteInterrupt {
 				break
 			}
-			t.Lock()
-			t.Error = err
-			t.UpdateStopTime()
-			t.Unlock()
+			t.AbortError(err)
 			return
 		}
 		if t.Option.OnItemComplete != nil {
@@ -130,6 +136,6 @@ func (t *DeleteFileTask) Run() {
 	t.UpdateStopTime()
 	t.Unlock()
 	if t.Option.OnDone != nil {
-		t.Option.OnDone(t.Id)
+		t.Option.OnDone(t)
 	}
 }
