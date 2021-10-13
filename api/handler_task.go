@@ -7,7 +7,6 @@ import (
 	"youfile/config"
 	"youfile/service"
 	"youfile/template"
-	"youfile/util"
 )
 
 var getTaskList haruka.RequestHandler = func(context *haruka.Context) {
@@ -68,11 +67,13 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 		realPathMapping[realPath] = deletePath
 	}
 	task := service.DefaultTask.NewDeleteFileTask(&service.NewDeleteFileTaskOption{
-		Src: realDeletePath,
-		OnDone: func(id string) {
+		Src:               realDeletePath,
+		DisplaySrcMapping: realPathMapping,
+		OnDone: func(task *service.DeleteFileTask) {
 			DefaultNotificationManager.sendJSONToUser(haruka.JSON{
 				"event": EventDeleteTaskDone,
-				"id":    id,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
 			}, username)
 		},
 		OnItemComplete: func(id string, src string) {
@@ -81,6 +82,13 @@ var newDeleteTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
 				"id":    id,
 				"src":   realPathMapping[src],
 			}, username)
+		},
+		OnError: func(task *service.DeleteFileTask) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": EventMoveTaskError,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
+			})
 		},
 		Username: username,
 	})
@@ -100,19 +108,22 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 		AbortErrorWithStatus(err, context, http.StatusBadRequest)
 		return
 	}
+	realPathToPath := map[string]string{}
 	for _, option := range requestBody.List {
 		realSrc, err := service.GetRealPath(option.Src, context.Param["token"].(string))
 		if err != nil {
 			AbortErrorWithStatus(err, context, http.StatusBadRequest)
 			return
 		}
+		realPathToPath[realSrc] = option.Src
 		realDest, err := service.GetRealPath(option.Dest, context.Param["token"].(string))
 		if err != nil {
 			AbortErrorWithStatus(err, context, http.StatusBadRequest)
 			return
 		}
-		option.Src = util.ConvertPathWithOS(realSrc)
-		option.Dest = util.ConvertPathWithOS(realDest)
+		realPathToPath[realDest] = option.Dest
+		option.Src = realSrc
+		option.Dest = realDest
 		option.OnComplete = func(id string) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": EventCopyItemComplete,
@@ -124,14 +135,84 @@ var newCopyFileTaskHandler haruka.RequestHandler = func(context *haruka.Context)
 	}
 	task := service.DefaultTask.NewCopyTask(&service.NewCopyTaskOption{
 		Options: requestBody.List,
-		OnDone: func(id string) {
+		OnDone: func(task *service.CopyTask) {
 			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
 				"event": EventCopyTaskComplete,
-				"id":    id,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
+			})
+		},
+		OnError: func(task *service.CopyTask) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": EventCopyTaskError,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
 			})
 		},
 		Username:    context.Param["username"].(string),
 		OnDuplicate: requestBody.Duplicate,
+		DisplayPath: realPathToPath,
+	})
+	go task.Run()
+	context.JSON(template.NewTaskTemplate(task))
+}
+
+type CreateMoveTaskRequestBody struct {
+	List      []*service.MoveOption `json:"list"`
+	Duplicate string                `json:"duplicate"`
+}
+
+var newMoveFileTaskHandler haruka.RequestHandler = func(context *haruka.Context) {
+	var requestBody CreateMoveTaskRequestBody
+	err := context.ParseJson(&requestBody)
+	if err != nil {
+		AbortErrorWithStatus(err, context, http.StatusBadRequest)
+		return
+	}
+	displayPath := map[string]string{}
+	for _, option := range requestBody.List {
+		realSrc, err := service.GetRealPath(option.Src, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		realDest, err := service.GetRealPath(option.Dest, context.Param["token"].(string))
+		if err != nil {
+			AbortErrorWithStatus(err, context, http.StatusBadRequest)
+			return
+		}
+		displayPath[realSrc] = option.Src
+		displayPath[realDest] = option.Dest
+		option.Src = realSrc
+		option.Dest = realDest
+		option.OnComplete = func(id string) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": EventMoveItemComplete,
+				"id":    id,
+				"src":   option.Src,
+				"dest":  option.Dest,
+			})
+		}
+	}
+	task := service.DefaultTask.NewMoveTask(&service.NewMoveTaskOption{
+		Options: requestBody.List,
+		OnDone: func(task *service.MoveTask) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": EventMoveTaskComplete,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
+			})
+		},
+		OnError: func(task *service.MoveTask) {
+			DefaultNotificationManager.sendJSONToAll(haruka.JSON{
+				"event": EventMoveTaskError,
+				"id":    task.Id,
+				"task":  template.NewTaskTemplate(task),
+			})
+		},
+		Username:    context.Param["username"].(string),
+		OnDuplicate: requestBody.Duplicate,
+		DisplayPath: displayPath,
 	})
 	go task.Run()
 	context.JSON(template.NewTaskTemplate(task))

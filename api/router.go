@@ -21,6 +21,7 @@ func SetRouter(e *haruka.Engine) {
 	e.Router.GET("/path/readFile", readAsTextFileHandler)
 	e.Router.AddHandler("/task/search", newSearchFileTaskHandler)
 	e.Router.AddHandler("/task/copy", newCopyFileTaskHandler)
+	e.Router.AddHandler("/task/move", newMoveFileTaskHandler)
 	e.Router.AddHandler("/task/unarchive", newExtractTaskHandler)
 	e.Router.AddHandler("/task/archive", newArchiveTaskHandler)
 	e.Router.AddHandler("/task/delete", newDeleteTaskHandler)

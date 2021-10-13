@@ -6,54 +6,38 @@ import (
 	"youfile/util"
 )
 
-type NewCopyTaskOption struct {
-	Options     []*CopyOption
-	OnDone      func(task *CopyTask)
-	OnError     func(task *CopyTask)
-	DisplayPath map[string]string
+type NewMoveTaskOption struct {
+	Options     []*MoveOption
+	OnDone      func(task *MoveTask)
+	OnError     func(task *MoveTask)
 	Username    string `json:"username"`
 	OnDuplicate string `json:"onDuplicate"`
+	DisplayPath map[string]string
 }
-type CopyOption struct {
+type MoveOption struct {
 	Src        string          `json:"src"`
 	Dest       string          `json:"dest"`
 	OnComplete func(id string) `json:"-"`
 }
-type CopyTask struct {
+type MoveTask struct {
 	TaskInfo
-	Output *CopyFileTaskOutput
+	Output *MoveFileTaskOutput
 	sync.Mutex
-	Option *NewCopyTaskOption
+	Option *NewMoveTaskOption
 }
 
-type CopyFileTaskOutput struct {
+type MoveFileTaskOutput struct {
 	TotalLength    int64         `json:"total_length"`
 	FileCount      int           `json:"file_count"`
 	Complete       int           `json:"complete"`
 	CompleteLength int64         `json:"complete_length"`
-	List           []*CopyOption `json:"list"`
-	CurrentCopy    string        `json:"current_copy"`
+	List           []*MoveOption `json:"list"`
+	CurrentMove    string        `json:"current_copy"`
 	Progress       float64       `json:"progress"`
 	Speed          int64         `json:"speed"`
 }
 
-func (t *TaskPool) NewCopyTask(option *NewCopyTaskOption) Task {
-	taskInfo := t.createTask(option.Username)
-	taskInfo.Type = TaskTypeCopy
-	taskInfo.Status = TaskStateRunning
-	task := CopyTask{
-		TaskInfo: taskInfo,
-		Output: &CopyFileTaskOutput{
-			List: option.Options,
-		},
-		Option: option,
-	}
-	t.Lock()
-	t.Tasks = append(t.Tasks, &task)
-	t.Unlock()
-	return &task
-}
-func (t *CopyTask) AbortError(err error) {
+func (t *MoveTask) AbortError(err error) {
 	t.Lock()
 	t.Error = err
 	t.Status = TaskStateError
@@ -63,7 +47,23 @@ func (t *CopyTask) AbortError(err error) {
 		t.Option.OnError(t)
 	}
 }
-func (t *CopyTask) Run() {
+func (t *TaskPool) NewMoveTask(option *NewMoveTaskOption) Task {
+	taskInfo := t.createTask(option.Username)
+	taskInfo.Type = TaskTypeMove
+	taskInfo.Status = TaskStateRunning
+	task := MoveTask{
+		TaskInfo: taskInfo,
+		Output: &MoveFileTaskOutput{
+			List: option.Options,
+		},
+		Option: option,
+	}
+	t.Lock()
+	t.Tasks = append(t.Tasks, &task)
+	t.Unlock()
+	return &task
+}
+func (t *MoveTask) Run() {
 	// analyze
 	infos := make([]*CopyAnalyzeResult, 0)
 	for _, option := range t.Option.Options {
@@ -85,7 +85,7 @@ func (t *CopyTask) Run() {
 	t.Status = TaskStateRunning
 	t.Unlock()
 
-	notifier := &CopyFileNotifier{
+	notifier := &MoveFileNotifier{
 		CurrentFileChan:   make(chan string),
 		CompleteDeltaChan: make(chan int64),
 		FileCompleteChan:  make(chan string),
@@ -101,7 +101,7 @@ func (t *CopyTask) Run() {
 			select {
 			case currentFile := <-notifier.CurrentFileChan:
 				t.Lock()
-				t.Output.CurrentCopy = currentFile
+				t.Output.CurrentMove = currentFile
 				t.Unlock()
 			case completeDelta := <-notifier.CompleteDeltaChan:
 				t.Lock()
@@ -146,7 +146,7 @@ func (t *CopyTask) Run() {
 		}
 	}()
 	for _, option := range t.Option.Options {
-		err := Copy(option.Src, option.Dest, notifier, t.Option.OnDuplicate)
+		err := Move(option.Src, option.Dest, notifier, t.Option.OnDuplicate)
 		if err == util.CopyInterrupt {
 			break
 		}

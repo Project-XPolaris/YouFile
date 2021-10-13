@@ -11,6 +11,7 @@ var DefaultTask = NewTaskPool()
 
 const (
 	TaskTypeCopy      = "Copy"
+	TaskTypeMove      = "Move"
 	TaskTypeSearch    = "Search"
 	TaskTypeDelete    = "Delete"
 	TaskTypeUnarchive = "Unarchive"
