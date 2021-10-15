@@ -12,12 +12,13 @@ import (
 )
 
 type FileItem struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Path      string `json:"path"`
-	Size      int64  `json:"size"`
-	Thumbnail string `json:"thumbnail,omitempty"`
-	IsDataset bool   `json:"isDataset"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Path       string `json:"path"`
+	Size       int64  `json:"size"`
+	ModifyTime string `json:"modifyTime"`
+	Thumbnail  string `json:"thumbnail,omitempty"`
+	IsDataset  bool   `json:"isDataset"`
 }
 type FileListTemplate struct {
 	Result []FileItem `json:"result"`
@@ -28,9 +29,10 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string, realPath strin
 	items := make([]FileItem, 0)
 	for _, info := range result {
 		item := FileItem{
-			Name: info.Name(),
-			Path: filepath.Join(parentPath, info.Name()),
-			Size: info.Size(),
+			Name:       info.Name(),
+			Path:       filepath.Join(parentPath, info.Name()),
+			Size:       info.Size(),
+			ModifyTime: info.ModTime().Format(timeFormat),
 		}
 		if info.IsDir() {
 			item.Type = "Directory"
@@ -47,7 +49,6 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string, realPath strin
 					item.IsDataset = *reply.IsDataset
 				}
 			}
-
 		} else {
 			item.Type = "File"
 			thumbnailName, _ := service.GetFileThumbnail(item.Path)
