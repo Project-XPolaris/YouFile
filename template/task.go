@@ -122,6 +122,8 @@ type CopyFileOutputTemplate struct {
 
 func (t *CopyFileOutputTemplate) Serialize(task service.Task) {
 	copyTask := task.(*service.CopyTask)
+	t.TotalLength = copyTask.Output.TotalLength
+	t.CompleteLength = copyTask.Output.CompleteLength
 	t.Complete = copyTask.Output.Complete
 	t.FileCount = copyTask.Output.FileCount
 	t.CurrentCopy = copyTask.Output.CurrentCopy
@@ -216,6 +218,8 @@ type MoveFileOutputTemplate struct {
 
 func (t *MoveFileOutputTemplate) Serialize(task service.Task) {
 	moveTask := task.(*service.MoveTask)
+	t.TotalLength = moveTask.Output.TotalLength
+	t.CompleteLength = moveTask.Output.CompleteLength
 	t.Complete = moveTask.Output.Complete
 	t.FileCount = moveTask.Output.FileCount
 	t.CurrentMove = moveTask.Output.CurrentMove
