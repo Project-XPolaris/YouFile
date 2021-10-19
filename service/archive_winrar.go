@@ -18,6 +18,14 @@ type WinRAREngine struct {
 	UnRARPath string
 }
 
+func (e *WinRAREngine) CanCompress() bool {
+	return true
+}
+
+func (e *WinRAREngine) CanExtract() bool {
+	return true
+}
+
 func NewWinRAREngine(rarPath string, unRARPath string) *WinRAREngine {
 	return &WinRAREngine{RarPath: rarPath, UnRARPath: unRARPath}
 }
