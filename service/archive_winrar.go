@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bufio"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -61,10 +62,24 @@ func (e *WinRAREngine) Extract(target string, output string, option ExtractOptio
 	}
 	args = append(args, target, output)
 	cmd := exec.Command(e.UnRARPath, args...)
-	_, err := cmd.Output()
+	rawOutput := ""
+	go func() {
+		sout, err := cmd.StdoutPipe()
+		if err != nil {
+			fmt.Println(err)
+		}
+		scanner := bufio.NewScanner(sout)
+		//scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+			rawOutput += fmt.Sprintf("%s\n", m)
+		}
+	}()
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(rawOutput)
 	return nil
 }

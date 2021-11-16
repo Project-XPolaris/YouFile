@@ -29,6 +29,11 @@ type YouLogConfig struct {
 	Application string
 	Instance    string
 }
+type YouLinkConfig struct {
+	Enable     bool
+	Url        string
+	ServiceUrl string
+}
 type AppConfig struct {
 	Addr            string
 	FstabPath       string
@@ -45,6 +50,7 @@ type AppConfig struct {
 	Entity          EntityConfig
 	YouLog          YouLogConfig
 	Remote          RemoteConfig
+	YouLink         YouLinkConfig
 }
 type RemoteServerConfig struct {
 	Enable bool
@@ -128,6 +134,11 @@ func LoadAppConfig(configPath string) error {
 			Enable: Manager.GetBool("remote.client.enable"),
 			Addrs:  Manager.GetStringSlice("remote.client.addrs"),
 		},
+	}
+	Instance.YouLink = YouLinkConfig{
+		Enable:     Manager.GetBool("youlink.enable"),
+		Url:        Manager.GetString("youlink.url"),
+		ServiceUrl: Manager.GetString("youlink.service"),
 	}
 	return nil
 }

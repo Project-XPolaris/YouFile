@@ -51,7 +51,9 @@ func MoveFile(source, dest string, notifier *MoveFileNotifier, onDuplicate strin
 	// try to rename
 	err = AppFs.Rename(source, targetDest)
 	if err == nil {
-		notifier.CompleteDeltaChan <- srcStats.Size()
+		if notifier != nil {
+			notifier.CompleteDeltaChan <- srcStats.Size()
+		}
 	} else {
 		// Open the source file.
 		src, err := AppFs.Open(source)
