@@ -21,8 +21,10 @@ type FileItem struct {
 	IsDataset  bool   `json:"isDataset"`
 }
 type FileListTemplate struct {
-	Result []FileItem `json:"result"`
-	Sep    string     `json:"sep"`
+	Success bool       `json:"success"`
+	Result  []FileItem `json:"result"`
+	Sep     string     `json:"sep"`
+	Name    string     `json:"name"`
 }
 
 func NewFileListTemplate(result []os.FileInfo, parentPath string, realPath string) *FileListTemplate {
@@ -56,7 +58,8 @@ func NewFileListTemplate(result []os.FileInfo, parentPath string, realPath strin
 		}
 		items = append(items, item)
 	}
-	return &FileListTemplate{Result: items, Sep: string(filepath.Separator)}
+
+	return &FileListTemplate{Result: items, Sep: string(filepath.Separator), Success: true, Name: filepath.Base(realPath)}
 }
 
 func NewFileListTemplateFromTargetFile(result []service.TargetFile, src string) *FileListTemplate {
